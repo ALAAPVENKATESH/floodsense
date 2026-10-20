@@ -1,0 +1,227 @@
+{
+  "data_source": "SYNTHETIC",
+  "warning": "SYNTHETIC DATA: this dataset was simulated for coursework. It is not measured rainfall, terrain, or flood history. Do not report these metrics as real-world performance.",
+  "disclaimer": "Academic prediction system for Machine Learning (BIC703), Group G2. This is not an official emergency-warning or evacuation system. Do not use it for operational decisions, alerts, or evacuation.",
+  "label_rule": "Synthetic latent score binned at quantiles 0.34 and 0.67 of the generated table (LOW / MODERATE / HIGH), then 6% cycled label noise. Not a measured hazard class.",
+  "n_rows": 8000,
+  "n_train": 6400,
+  "n_test": 1600,
+  "dropped_invalid": 0,
+  "dropped_duplicates": 0,
+  "features": [
+    "rainfall",
+    "rainfall_intensity",
+    "elevation",
+    "slope",
+    "drainage_density",
+    "impervious_area",
+    "distance_to_water",
+    "historical_flood",
+    "rainfall_antecedent",
+    "rainfall_x_impervious",
+    "cumulative_rainfall",
+    "elevation_relative_to_water"
+  ],
+  "base_features": [
+    "rainfall",
+    "rainfall_intensity",
+    "elevation",
+    "slope",
+    "drainage_density",
+    "impervious_area",
+    "distance_to_water",
+    "historical_flood",
+    "rainfall_antecedent"
+  ],
+  "labels": [
+    "LOW",
+    "MODERATE",
+    "HIGH"
+  ],
+  "class_distribution": {
+    "LOW": 2747,
+    "MODERATE": 2655,
+    "HIGH": 2598
+  },
+  "hyperparameters": {
+    "n_estimators": 40,
+    "max_depth": 8,
+    "min_samples_split": 2,
+    "min_samples_leaf": 8,
+    "max_features": 0.5,
+    "criterion": "gini",
+    "class_weight": "balanced",
+    "bootstrap": true,
+    "random_state": 42,
+    "search_n_estimators": 15
+  },
+  "search": [
+    {
+      "max_depth": 6,
+      "min_samples_leaf": 12,
+      "max_features": "sqrt",
+      "validation_macro_f1": 0.6090816618403762
+    },
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 8,
+      "max_features": "sqrt",
+      "validation_macro_f1": 0.6140188452572319
+    },
+    {
+      "max_depth": 10,
+      "min_samples_leaf": 5,
+      "max_features": "sqrt",
+      "validation_macro_f1": 0.607136561836361
+    },
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 8,
+      "max_features": 0.5,
+      "validation_macro_f1": 0.6152494038871481
+    }
+  ],
+  "train": {
+    "accuracy": 0.7128125,
+    "precision_macro": 0.7273967311196766,
+    "recall_macro": 0.713533222334811,
+    "f1_macro": 0.7159730548617439,
+    "precision_weighted": 0.7278528775552937,
+    "recall_weighted": 0.7128125,
+    "f1_weighted": 0.7157945949978469,
+    "per_class": {
+      "LOW": {
+        "precision": 0.8018558951965066,
+        "recall": 0.6683348498635123,
+        "f1": 0.7290322580645162,
+        "support": 2198
+      },
+      "MODERATE": {
+        "precision": 0.5966192854398771,
+        "recall": 0.7311676082862524,
+        "f1": 0.6570763697905648,
+        "support": 2124
+      },
+      "HIGH": {
+        "precision": 0.7837150127226463,
+        "recall": 0.7410972088546679,
+        "f1": 0.7618105367301509,
+        "support": 2078
+      }
+    },
+    "confusion_matrix": [
+      [
+        1469,
+        579,
+        150
+      ],
+      [
+        296,
+        1553,
+        275
+      ],
+      [
+        67,
+        471,
+        1540
+      ]
+    ],
+    "labels": [
+      "LOW",
+      "MODERATE",
+      "HIGH"
+    ],
+    "n": 6400
+  },
+  "test": {
+    "accuracy": 0.616875,
+    "precision_macro": 0.6323648622301499,
+    "recall_macro": 0.6172030613125362,
+    "f1_macro": 0.6218745454757787,
+    "precision_weighted": 0.6328605419922776,
+    "recall_weighted": 0.616875,
+    "f1_weighted": 0.621930698559271,
+    "per_class": {
+      "LOW": {
+        "precision": 0.7197452229299363,
+        "recall": 0.6174863387978142,
+        "f1": 0.6647058823529411,
+        "support": 549
+      },
+      "MODERATE": {
+        "precision": 0.4740973312401884,
+        "recall": 0.568738229755179,
+        "f1": 0.517123287671233,
+        "support": 531
+      },
+      "HIGH": {
+        "precision": 0.7032520325203252,
+        "recall": 0.6653846153846154,
+        "f1": 0.683794466403162,
+        "support": 520
+      }
+    },
+    "confusion_matrix": [
+      [
+        339,
+        175,
+        35
+      ],
+      [
+        118,
+        302,
+        111
+      ],
+      [
+        14,
+        160,
+        346
+      ]
+    ],
+    "labels": [
+      "LOW",
+      "MODERATE",
+      "HIGH"
+    ],
+    "n": 1600
+  },
+  "baseline_accuracy": 0.343125,
+  "oob_score": 0.60375,
+  "overfit_gap_accuracy": 0.09593750000000001,
+  "train_seconds": 50.78037209995091,
+  "test_report": "label        precision    recall        f1   support\nLOW              0.720     0.617     0.665       549\nMODERATE         0.474     0.569     0.517       531\nHIGH             0.703     0.665     0.684       520\nmacro            0.632     0.617     0.622      1600\nweighted         0.633     0.617     0.622      1600\naccuracy         0.617",
+  "learning_curve": [
+    {
+      "n_estimators": 5,
+      "oob_accuracy": 0.5583941605839416
+    },
+    {
+      "n_estimators": 10,
+      "oob_accuracy": 0.5768683836309053
+    },
+    {
+      "n_estimators": 15,
+      "oob_accuracy": 0.5875821082264623
+    },
+    {
+      "n_estimators": 20,
+      "oob_accuracy": 0.5964363863707408
+    },
+    {
+      "n_estimators": 25,
+      "oob_accuracy": 0.59703125
+    },
+    {
+      "n_estimators": 30,
+      "oob_accuracy": 0.6015625
+    },
+    {
+      "n_estimators": 35,
+      "oob_accuracy": 0.60171875
+    },
+    {
+      "n_estimators": 40,
+      "oob_accuracy": 0.60375
+    }
+  ]
+}

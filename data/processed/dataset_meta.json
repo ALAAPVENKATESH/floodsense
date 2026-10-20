@@ -1,0 +1,16 @@
+{
+  "data_source": "SYNTHETIC",
+  "warning": "SYNTHETIC DATA: this dataset was simulated for coursework. It is not measured rainfall, terrain, or flood history. Do not report these metrics as real-world performance.",
+  "n_rows": 8000,
+  "class_counts": {
+    "LOW": 2747,
+    "MODERATE": 2655,
+    "HIGH": 2598
+  },
+  "label_rule": "Synthetic latent score binned at quantiles 0.34 and 0.67 of the generated table (LOW / MODERATE / HIGH), then 6% cycled label noise. Not a measured hazard class.",
+  "files": [],
+  "generator_seed": 42,
+  "excluded_features": [],
+  "dropped_invalid": 0,
+  "dropped_duplicates": 0
+}

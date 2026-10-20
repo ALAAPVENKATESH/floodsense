@@ -1,0 +1,103 @@
+{
+  "note": "Feature importance reflects model behavior on the fitted data, not proof of causation.",
+  "impurity": [
+    {
+      "feature": "rainfall_x_impervious",
+      "importance": 0.2412932104694047
+    },
+    {
+      "feature": "drainage_density",
+      "importance": 0.14161505427863946
+    },
+    {
+      "feature": "elevation_relative_to_water",
+      "importance": 0.10728141333721575
+    },
+    {
+      "feature": "elevation",
+      "importance": 0.09993548510233204
+    },
+    {
+      "feature": "impervious_area",
+      "importance": 0.08623333755818481
+    },
+    {
+      "feature": "cumulative_rainfall",
+      "importance": 0.07677422019246895
+    },
+    {
+      "feature": "historical_flood",
+      "importance": 0.06265668353810182
+    },
+    {
+      "feature": "rainfall",
+      "importance": 0.06251028713442687
+    },
+    {
+      "feature": "distance_to_water",
+      "importance": 0.03353545151631872
+    },
+    {
+      "feature": "slope",
+      "importance": 0.030504685061639735
+    },
+    {
+      "feature": "rainfall_antecedent",
+      "importance": 0.030219196535837912
+    },
+    {
+      "feature": "rainfall_intensity",
+      "importance": 0.02744097527542943
+    }
+  ],
+  "permutation": [
+    {
+      "feature": "rainfall_x_impervious",
+      "importance": 0.0929166666666666
+    },
+    {
+      "feature": "drainage_density",
+      "importance": 0.05499999999999997
+    },
+    {
+      "feature": "elevation_relative_to_water",
+      "importance": 0.03958333333333327
+    },
+    {
+      "feature": "elevation",
+      "importance": 0.018333333333333313
+    },
+    {
+      "feature": "cumulative_rainfall",
+      "importance": 0.015833333333333293
+    },
+    {
+      "feature": "impervious_area",
+      "importance": 0.014583333333333318
+    },
+    {
+      "feature": "historical_flood",
+      "importance": 0.012916666666666651
+    },
+    {
+      "feature": "slope",
+      "importance": 0.004999999999999967
+    },
+    {
+      "feature": "rainfall_antecedent",
+      "importance": 0.002083333333333289
+    },
+    {
+      "feature": "rainfall_intensity",
+      "importance": -3.700743415417188e-17
+    },
+    {
+      "feature": "rainfall",
+      "importance": -0.0008333333333333895
+    },
+    {
+      "feature": "distance_to_water",
+      "importance": -0.004583333333333421
+    }
+  ]
+}
