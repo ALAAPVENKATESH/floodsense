@@ -4,7 +4,11 @@ Put measured CSV files in this folder and run `python scripts/build_dataset.py`.
 
 If this folder has no CSV files, the build script writes a simulated dataset and labels it `SYNTHETIC`. Do not add the synthetic file here; that would make the next build treat it as a user-supplied table.
 
-This project does not download data. The columns below are the ones the pipeline knows how to use. Extra columns are kept only when they are merge keys or a label.
+`flood_classification.csv` is produced by `scripts/prepare_classification.py` from `flood_dataset_classification.csv` in the project root. Those rows are the file's flood-positive records (`occured = 1`). The build keeps `data_source = CLASSIFICATION`. People affected is the label score, not a feature. The file cites no agency, and rainfall contains repeated filled values, so the build does not call the table measured floods.
+
+`urbanfloodbench.csv`, if you regenerate it with `scripts/prepare_urbanfloodbench.py`, is HEC-RAS output. Do not leave it in this folder beside `flood_classification.csv`. The two files have different lengths and no shared key, so the build cannot merge them.
+
+The columns below are the ones the pipeline knows how to use. Extra columns are kept only when they are merge keys or a label.
 
 ## Expected columns
 
@@ -45,6 +49,10 @@ Rows outside the physical bounds in `config.FEATURE_RANGES` are dropped. Missing
 ## Sources to cite when you add real files
 
 Record the version, geographic coverage, time period, and licence in `docs/dataset_documentation.md` and in `dataset_meta.json` after the build.
+
+This run's external rainfall is [CHIRPS v2.0](https://www.chc.ucsb.edu/data/chirps) ([monthly files](https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/), [Funk et al. 2015](https://doi.org/10.1038/sdata.2015.66)). WorldPop was not downloaded: [listing](https://hub.worldpop.org/geodata/listing?id=64), [doi:10.5258/SOTON/WP00647](https://doi.org/10.5258/SOTON/WP00647). The unused fallbacks are [GPW v4](https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-density-rev11) and [ERA5](https://cds.climate.copernicus.eu/).
+
+Not used here:
 
 - Rainfall observations: [India-WRIS / National Water Data Portal](https://indiawris.gov.in/).
 - Geographic and flood layers: [ISRO / NRSC Bhuvan](https://bhuvan.nrsc.gov.in/).

@@ -28,6 +28,17 @@ UNITS = {
     "impervious_area": "%",
     "distance_to_water": "km",
     "historical_flood": "0–1",
+    "latitude": "°",
+    "longitude": "°",
+    "year": "",
+    "rainfall_file": "mm",
+    "rain_annual_mm": "mm",
+    "rain_max_month_mm": "mm",
+    "rain_wet_month_share": "share",
+    "rain_anomaly": "z",
+    "pop_density_point": "people/km²",
+    "pop_sum_25km": "people",
+    "pop_sum_100km": "people",
 }
 
 LABELS = {
@@ -43,13 +54,39 @@ LABELS = {
     "rainfall_x_impervious": "Rainfall × impervious",
     "cumulative_rainfall": "Cumulative rainfall",
     "elevation_relative_to_water": "Elevation × distance",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "year": "Year",
+    "rainfall_missing": "Rainfall missing",
+    "elevation_missing": "Elevation missing",
+    "rainfall_file": "File rainfall",
+    "rain_annual_mm": "CHIRPS annual rainfall",
+    "rain_max_month_mm": "CHIRPS wettest month",
+    "rain_wet_month_share": "CHIRPS wet-month share",
+    "rain_anomaly": "CHIRPS rainfall anomaly",
+    "pop_density_point": "Population density",
+    "pop_sum_25km": "Population within 25 km",
+    "pop_sum_100km": "Population within 100 km",
 }
 
 GROUPS = (
-    ("Rainfall", ("rainfall", "rainfall_intensity", "rainfall_antecedent")),
+    ("Rainfall", ("rainfall", "rainfall_file", "rainfall_intensity", "rainfall_antecedent")),
     ("Terrain", ("elevation", "slope", "distance_to_water")),
     ("Urban & Drainage", ("impervious_area", "drainage_density")),
     ("History", ("historical_flood",)),
+    ("Location", ("latitude", "longitude", "year")),
+    (
+        "Exposure",
+        (
+            "rain_annual_mm",
+            "rain_max_month_mm",
+            "rain_wet_month_share",
+            "rain_anomaly",
+            "pop_density_point",
+            "pop_sum_25km",
+            "pop_sum_100km",
+        ),
+    ),
 )
 
 STEPS = {
@@ -62,6 +99,17 @@ STEPS = {
     "impervious_area": 1.0,
     "distance_to_water": 0.01,
     "historical_flood": 0.01,
+    "latitude": 0.01,
+    "longitude": 0.01,
+    "year": 1.0,
+    "rainfall_file": 1.0,
+    "rain_annual_mm": 1.0,
+    "rain_max_month_mm": 1.0,
+    "rain_wet_month_share": 0.01,
+    "rain_anomaly": 0.01,
+    "pop_density_point": 1.0,
+    "pop_sum_25km": 100.0,
+    "pop_sum_100km": 1000.0,
 }
 
 NAV = (

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import plotly.graph_objects as go
 
 from app.ui.theme import RISK_COLORS, ChartTheme, display_name
@@ -264,17 +265,22 @@ def depth_curve(depths: list[int], scores: list[float], theme: ChartTheme) -> go
     return finish(fig, theme, "Depth vs validation F1", 320)
 
 
-def histogram(values, feature: str, theme: ChartTheme) -> go.Figure:
-    """Distribution of one numeric column."""
+def histogram(values, feature: str, theme: ChartTheme, log_scale: bool = False) -> go.Figure:
+    """Distribution of one numeric column. Population and CHIRPS totals use a log1p axis."""
+    data = values
+    axis = display_name(feature)
+    if log_scale:
+        data = np.log1p(np.clip(np.asarray(values, dtype=float), 0, None))
+        axis = f"log1p({axis})"
     fig = go.Figure(
         go.Histogram(
-            x=list(values),
+            x=list(data),
             nbinsx=32,
             marker=dict(color=theme.brand, cornerradius=4),
             hovertemplate="%{x}<br>%{y} rows<extra></extra>",
         )
     )
-    fig.update_xaxes(title=display_name(feature))
+    fig.update_xaxes(title=axis)
     fig.update_yaxes(title="Rows")
     return finish(fig, theme, f"{display_name(feature)} distribution", 320)
 

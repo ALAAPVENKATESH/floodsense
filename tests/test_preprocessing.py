@@ -148,6 +148,74 @@ def test_unit_hazard_column_is_removed_from_predictors(tmp_path):
     assert meta["excluded_features"] == ["historical_flood"]
 
 
+def test_urbanfloodbench_tag_is_not_relabeled_real(tmp_path, capsys):
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    pd.DataFrame(
+        {
+            "rainfall": [10.0, 40.0, 80.0],
+            "elevation": [20.0, 10.0, 5.0],
+            "risk_class": ["LOW", "MODERATE", "HIGH"],
+            "data_source": ["URBANFLOODBENCH"] * 3,
+        }
+    ).to_csv(raw / "urbanfloodbench.csv", index=False)
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "flood_synthetic.csv").write_text("stale", encoding="utf-8")
+    meta = build(raw_dir=raw, out_dir=out)
+    frame = pd.read_csv(out / "dataset.csv")
+    assert meta["data_source"] == "URBANFLOODBENCH"
+    assert "HEC-RAS" in capsys.readouterr().err
+    assert set(frame["data_source"]) == {"URBANFLOODBENCH"}
+    assert "0.15" in meta["label_rule"]
+    assert not (out / "flood_synthetic.csv").exists()
+
+
+def test_classification_tag_is_not_relabeled_real(tmp_path, capsys):
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    pd.DataFrame(
+        {
+            "rainfall": [10.0, 40.0, 80.0],
+            "elevation": [20.0, 10.0, 5.0],
+            "flood_hazard_score": [10.0, 500.0, 9000.0],
+            "data_source": ["CLASSIFICATION"] * 3,
+        }
+    ).to_csv(raw / "flood_classification.csv", index=False)
+    meta = build(raw_dir=raw, out_dir=tmp_path / "out")
+    frame = pd.read_csv(tmp_path / "out" / "dataset.csv")
+    assert meta["data_source"] == "CLASSIFICATION"
+    assert "people affected" in capsys.readouterr().err
+    assert set(frame["data_source"]) == {"CLASSIFICATION"}
+    assert "occured = 1" in meta["label_rule"]
+    assert "flood_hazard_score" in frame.columns
+    assert "risk_class" not in frame.columns
+
+
+def test_event_hours_reads_timestamp_not_the_index(tmp_path):
+    from prepare_urbanfloodbench import event_hours
+
+    path = tmp_path / "timesteps.csv"
+    pd.DataFrame(
+        {
+            "timestep_idx": [0, 1, 2],
+            "timestamp": ["2025-10-02 04:00:00", "2025-10-02 04:05:00", "2025-10-02 04:10:00"],
+        }
+    ).to_csv(path, index=False)
+    assert event_hours(path) == pytest.approx(0.25)
+
+
+def test_depth_cuts_and_row_cap():
+    from prepare_urbanfloodbench import depth_to_class, stratified_cap
+
+    labels = depth_to_class(pd.Series([0.0, 0.14, 0.15, 0.49, 0.50]))
+    assert labels.tolist() == ["LOW", "LOW", "MODERATE", "MODERATE", "HIGH"]
+    frame = pd.DataFrame({"risk_class": ["LOW"] * 50 + ["HIGH"] * 50, "rainfall": range(100)})
+    capped = stratified_cap(frame, 10, 42)
+    assert len(capped) == 10
+    assert set(capped["risk_class"]) == {"LOW", "HIGH"}
+
+
 def test_invalid_physical_value_is_dropped(tmp_path):
     raw = tmp_path / "raw"
     raw.mkdir()

@@ -37,12 +37,14 @@ def page() -> None:
         render(empty_state("Metrics missing", "Run python scripts/train.py to write models/metrics.json."))
         return
     test = report["test"]
+    spatial = report.get("headline") == "spatial" or report.get("split") == "spatial"
+    qwk = test.get("quadratic_weighted_kappa")
     cards = st.columns(4, gap="medium")
     tiles = (
-        ("Test accuracy", f"{test['accuracy']:.3f}", "Held-out test set"),
+        ("Spatial accuracy" if spatial else "Test accuracy", f"{test['accuracy']:.3f}", "Held-out spatial cells" if spatial else "Held-out test set"),
         ("Macro F1", f"{test['f1_macro']:.3f}", "Macro average"),
-        ("Trees in forest", str(report["hyperparameters"]["n_estimators"]), f"Depth {report['hyperparameters']['max_depth']}"),
-        ("Training samples", f"{report['n_train']:,}", f"of {report['n_rows']:,} modeled rows"),
+        ("QWK", f"{qwk:.3f}" if qwk is not None else "—", "Ordinal agreement"),
+        ("Majority baseline", f"{float(report.get('baseline_accuracy') or 0):.3f}", "Test accuracy"),
     )
     for column, (label, value, delta) in zip(cards, tiles):
         with column:

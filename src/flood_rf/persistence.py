@@ -15,6 +15,7 @@ import pandas as pd
 import config
 from flood_rf.explain import common_path_features, ranked_importance
 from flood_rf.features import FeatureEngineer
+from flood_rf.preprocessing import apply_measurement_mask
 from flood_rf.preprocessing import Preprocessor
 from flood_rf.random_forest import RandomForestClassifier
 
@@ -86,7 +87,8 @@ class FloodModel:
         return errors
 
     def prepare(self, frame: pd.DataFrame) -> np.ndarray:
-        filled = self.preprocess.transform(frame)
+        masked = apply_measurement_mask(frame, self.extra.get("filled_rainfall") or [])
+        filled = self.preprocess.transform(masked)
         engineered = FeatureEngineer().transform(filled)
         missing = [name for name in self.feature_names if name not in engineered.columns]
         if missing:

@@ -25,8 +25,9 @@ def page() -> None:
     fitted = model()
     meta = dataset_meta()
     source = str((report or meta or {}).get("data_source") or "UNKNOWN")
-    if source != "REAL":
-        render(callout(config.SYNTHETIC_WARNING))
+    notice = config.warning_for(source)
+    if notice:
+        render(callout(notice))
     _overview(frame, report, meta, source)
     engineered = FeatureEngineer().transform(frame)
     _dictionary(engineered, fitted)
@@ -43,6 +44,8 @@ def _overview(frame: pd.DataFrame, report: dict | None, meta: dict, source: str)
             f"No surveyed region or time period. Generator seed {meta.get('generator_seed', config.RANDOM_STATE)}. "
             "Labels are a noisy binning of a latent score, not a flood agency class."
         )
+    elif source == config.BENCHMARK_SOURCE:
+        coverage = meta.get("coverage") or config.BENCHMARK_COVERAGE
     else:
         coverage = meta.get("coverage") or (
             "Add geographic coverage, time period, dataset version, and license in docs/dataset_documentation.md."
@@ -62,6 +65,48 @@ def _overview(frame: pd.DataFrame, report: dict | None, meta: dict, source: str)
     ))
 
 
+def _sources() -> None:
+    path = config.DATA_PROCESSED / "external_meta.json"
+    if not path.exists():
+        return
+    import json
+
+    meta = json.loads(path.read_text(encoding="utf-8"))
+    render(section_header("External sources", "Joined on latitude, longitude, and year. A missing pixel stays missing."))
+    chirps = meta.get("chirps") or {}
+    population = meta.get("population") or {}
+    corr = meta.get("file_vs_chirps") or {}
+    pearson = corr.get("pearson")
+    pearson_text = "—" if pearson is None else f"{float(pearson):.3f}"
+    render(data_table(
+        ["Source", "Detail"],
+        [
+            ["CHIRPS", f"{chirps.get('dataset', 'CHIRPS v2.0')}, {chirps.get('resolution', '0.05°')}, public domain"],
+            ["CHIRPS window", f"{chirps.get('window_deg', 0.25)}° neighbourhood mean"],
+            ["CHIRPS baseline", chirps.get("climatology", "1981–2010")],
+            ["Population", population.get("primary", "WorldPop")],
+            ["Population fallback", population.get("fallback", "GPW v4")],
+            ["Radius sum", population.get("radius", "")],
+            ["File rainfall vs CHIRPS", f"Pearson {pearson_text} on {corr.get('n', 0)} rows"],
+        ],
+    ))
+    decades = meta.get("decades") or []
+    if decades:
+        render(data_table(
+            ["Decade", "Rows", "CHIRPS missing", "Population missing", "Year clipped"],
+            [
+                [
+                    str(row["decade"]),
+                    str(row["n"]),
+                    f"{float(row['rain_missing']):.0%}",
+                    f"{float(row['pop_missing']):.0%}",
+                    f"{float(row['pop_year_clipped']):.0%}",
+                ]
+                for row in decades
+            ],
+        ))
+
+
 def _split(report: dict | None) -> str:
     if not report:
         return "Run train.py to record the split."
@@ -72,7 +117,7 @@ def _dictionary(frame: pd.DataFrame, fitted) -> None:
     ranges = (fitted.extra.get("input_ranges") if fitted is not None else {}) or {}
     rows = []
     for name in frame.columns:
-        if name in {config.TARGET, config.SOURCE_COLUMN}:
+        if name in {config.TARGET, config.SOURCE_COLUMN, *config.LABEL_SCORE_COLUMNS}:
             continue
         description = config.FEATURE_HELP.get(name) or FORMULAS.get(name) or "Identifier or source field."
         unit = UNITS.get(name, "—")
@@ -112,7 +157,9 @@ def _charts(frame: pd.DataFrame, report: dict | None, theme) -> None:
     if counts:
         st.plotly_chart(charts.class_donut(counts, theme), use_container_width=True, config={"displayModeBar": False})
     numeric = frame.select_dtypes(include="number")
-    drop = [name for name in numeric.columns if name in set(config.ID_COLUMNS) | {config.TARGET}]
+    id_only = [name for name in config.ID_COLUMNS if name not in config.BASE_FEATURES + config.OPTIONAL_FEATURES]
+    blocked = set(id_only) | {config.TARGET} | set(config.LABEL_SCORE_COLUMNS) | set(config.INDICATOR_FEATURES)
+    drop = [name for name in numeric.columns if name in blocked]
     numeric = numeric.drop(columns=drop, errors="ignore")
     numeric = numeric.loc[:, numeric.notna().any()]
     if numeric.shape[1] >= 2:
@@ -128,4 +175,10 @@ def _charts(frame: pd.DataFrame, report: dict | None, theme) -> None:
         return
     feature = st.selectbox("Distribution", list(numeric.columns), format_func=display_name)
     values = numeric[feature].dropna().to_numpy()
-    st.plotly_chart(charts.histogram(values, feature, theme), use_container_width=True, config={"displayModeBar": False})
+    log_scale = feature in set(config.POP_EXT) | {"rain_annual_mm", "rain_max_month_mm"}
+    st.plotly_chart(
+        charts.histogram(values, feature, theme, log_scale=log_scale),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
+    _sources()

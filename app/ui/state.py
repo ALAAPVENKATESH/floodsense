@@ -11,7 +11,7 @@ import streamlit as st
 
 import config
 from flood_rf.persistence import load_model
-from flood_rf.preprocessing import stratified_train_test_split
+from flood_rf.preprocessing import split_positions, stratified_train_test_split
 
 
 def mode() -> str:
@@ -42,6 +42,12 @@ def _training_frame(path: str, mtime: float, seed: int, test_size: float) -> pd.
     """Rows from the same seeded split the trainer uses. Used only for percentiles."""
     del mtime
     frame = pd.read_csv(path)
+    if {"latitude", "longitude"} <= set(frame.columns):
+        train_idx, _test_idx = split_positions(frame, "spatial", seed, test_size)
+        return frame.iloc[train_idx].reset_index(drop=True)
+    if config.TARGET not in frame.columns or not frame[config.TARGET].notna().any():
+        train_idx, _test_idx = split_positions(frame, "random", seed, test_size)
+        return frame.iloc[train_idx].reset_index(drop=True)
     target = frame[config.TARGET]
     predictors = frame.drop(columns=[config.TARGET])
     train, _, _, _ = stratified_train_test_split(

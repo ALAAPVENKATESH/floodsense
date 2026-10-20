@@ -26,13 +26,18 @@ def source_flag(df: pd.DataFrame) -> str:
         return "SYNTHETIC"
     if "SYNTHETIC" in values:
         return "MIXED"
+    for name in (config.BENCHMARK_SOURCE, config.CLASSIFICATION_SOURCE):
+        if values == {name}:
+            return name
     return "REAL"
 
 
 def model_feature_columns(df: pd.DataFrame, drop: list[str] | None = None) -> list[str]:
     """Columns the forest may see. Absent optional columns are omitted, never filled in here."""
+    allowed = config.BASE_FEATURES + config.OPTIONAL_FEATURES
     blocked = set(drop or [])
-    blocked.update([config.TARGET, config.SOURCE_COLUMN, *config.ID_COLUMNS, *config.LABEL_SCORE_COLUMNS])
+    blocked.update([config.TARGET, config.SOURCE_COLUMN, *config.LABEL_SCORE_COLUMNS])
+    blocked.update(column for column in config.ID_COLUMNS if column not in allowed)
     chosen = []
     for col in config.BASE_FEATURES + config.OPTIONAL_FEATURES:
         if col in df.columns and col not in blocked:

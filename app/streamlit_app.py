@@ -107,6 +107,25 @@ def _banner() -> None:
     source = source_name(report)
     if report is None or source == "REAL":
         return
+    if source == "URBANFLOODBENCH":
+        render(
+            banner(
+                "HEC-RAS simulations from UrbanFloodBench, not surveyed floods. "
+                "Do not report these metrics as real-world performance.",
+                title="UrbanFloodBench",
+            )
+        )
+        return
+    if source == config.CLASSIFICATION_SOURCE:
+        render(
+            banner(
+                "Flood-positive rows from flood_dataset_classification.csv. "
+                "Classes are people-affected quantiles, not surveyed depth. "
+                "Do not report these metrics as real-world performance.",
+                title="Classification table",
+            )
+        )
+        return
     render(
         banner(
             "Simulated for coursework. Not measured rainfall, terrain, or flood history. "

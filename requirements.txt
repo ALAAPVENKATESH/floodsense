@@ -5,3 +5,9 @@ streamlit==1.40.2
 plotly==5.24.1
 pytest==8.3.4
 scikit-learn==1.5.2
+kagglehub==1.0.2
+# Data preparation only (scripts/fetch_external.py, scripts/build_external_features.py).
+# The forest does not import these. rasterio wheels bundle GDAL; see the README.
+rasterio==1.4.3
+requests==2.32.3
+tqdm==4.67.1

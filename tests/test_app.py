@@ -110,7 +110,7 @@ def test_each_page_runs(page: str, needle: str) -> None:
     assert "FloodSense" in text
     assert needle in text
     if page == "dashboard":
-        assert "Synthetic" in text or "SYNTHETIC" in text
+        assert "Do not report these metrics as real-world performance." in text
 
 
 def _markdown(app) -> str:

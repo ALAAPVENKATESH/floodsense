@@ -14,9 +14,9 @@ import pandas as pd
 import config
 
 
-def drop_duplicate_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+def drop_duplicate_rows(df: pd.DataFrame, subset: list[str] | None = None) -> tuple[pd.DataFrame, int]:
     before = len(df)
-    cleaned = df.drop_duplicates().reset_index(drop=True)
+    cleaned = df.drop_duplicates(subset=subset).reset_index(drop=True)
     return cleaned, before - len(cleaned)
 
 
@@ -104,6 +104,255 @@ def _take(obj, idx: np.ndarray):
     if isinstance(obj, (pd.DataFrame, pd.Series)):
         return obj.iloc[idx].reset_index(drop=True)
     return np.asarray(obj)[idx]
+
+
+def grid_cell_ids(lat, lon, cell_deg: float = 5.0) -> np.ndarray:
+    """Stable block id ``lat_bin:lon_bin`` from floor(coord / cell_deg)."""
+    if cell_deg <= 0:
+        raise ValueError("cell_deg must be positive")
+    lat_v = np.asarray(pd.to_numeric(pd.Series(lat), errors="coerce"), dtype=np.float64)
+    lon_v = np.asarray(pd.to_numeric(pd.Series(lon), errors="coerce"), dtype=np.float64)
+    lat_bin = np.floor(lat_v / cell_deg)
+    lon_bin = np.floor(lon_v / cell_deg)
+    ids = np.empty(len(lat_v), dtype=object)
+    for i, (lat_i, lon_i) in enumerate(zip(lat_bin, lon_bin)):
+        if not np.isfinite(lat_i) or not np.isfinite(lon_i):
+            ids[i] = "missing"
+        else:
+            ids[i] = f"{int(lat_i)}:{int(lon_i)}"
+    return ids
+
+
+def _group_index(groups: np.ndarray) -> tuple[np.ndarray, dict]:
+    groups = np.asarray(groups)
+    uniq = np.unique(groups)
+    return uniq, {group: np.flatnonzero(groups == group) for group in uniq}
+
+
+def group_train_test_split(groups, test_size, seed, y=None):
+    """Hold out whole groups. Class balance is best effort when `y` is given.
+
+    Tolerance: the splitter tries to land within 25% of the target test-row
+    count, and, when labels are supplied, prefers groups that move each
+    class toward its target test count. A group is never split. A class share
+    can still miss the population share when one cell is large; that gap is
+    reported by the caller, not forced.
+    """
+    groups = np.asarray(groups)
+    n = len(groups)
+    if n < 2:
+        raise ValueError("group split needs at least two rows")
+    uniq, index = _group_index(groups)
+    rng = np.random.RandomState(int(seed))
+    order = uniq.copy()
+    rng.shuffle(order)
+    target = int(round(n * float(test_size)))
+    target = min(max(target, 1), n - 1)
+    y_arr = None if y is None else np.asarray(list(y))
+    classes = [] if y_arr is None else list(np.unique(y_arr))
+    target_c = {cls: float(np.sum(y_arr == cls)) * (target / n) for cls in classes}
+    test_c = {cls: 0.0 for cls in classes}
+    chosen: list = []
+    test_n = 0
+    remaining = list(order)
+    while remaining and test_n < target:
+        best = None
+        best_score = None
+        for group in remaining:
+            gsize = len(index[group])
+            if test_n > 0 and test_n >= target * 0.75 and test_n + gsize > target * 1.25:
+                continue
+            if y_arr is None:
+                best = group
+                break
+            added = {cls: float(np.sum(y_arr[index[group]] == cls)) for cls in classes}
+            score = 0.0
+            for cls in classes:
+                score += abs(test_c[cls] - target_c[cls]) - abs(test_c[cls] + added[cls] - target_c[cls])
+            score -= abs((test_n + gsize) - target) / n
+            if best_score is None or score > best_score:
+                best_score = score
+                best = group
+        if best is None:
+            break
+        remaining.remove(best)
+        chosen.append(best)
+        test_n += len(index[best])
+        for cls in classes:
+            test_c[cls] += float(np.sum(y_arr[index[best]] == cls))
+    if not chosen:
+        smallest = min(order, key=lambda group: len(index[group]))
+        chosen = [smallest]
+    test_idx = np.concatenate([index[group] for group in chosen])
+    train_mask = np.ones(n, dtype=bool)
+    train_mask[test_idx] = False
+    train_idx = np.flatnonzero(train_mask)
+    if len(train_idx) == 0 or len(test_idx) == 0:
+        raise ValueError("group split left one side empty")
+    return np.asarray(train_idx, dtype=int), np.asarray(test_idx, dtype=int)
+
+
+def group_kfold(groups, k, seed, y=None):
+    """Yield (train_idx, val_idx). No group appears in more than one fold."""
+    groups = np.asarray(groups)
+    k = int(k)
+    if k < 2:
+        raise ValueError("k must be at least 2")
+    uniq, index = _group_index(groups)
+    if k > len(uniq):
+        raise ValueError("k cannot exceed the number of groups")
+    rng = np.random.RandomState(int(seed))
+    order = uniq.copy()
+    rng.shuffle(order)
+    folds: list[list] = [[] for _ in range(k)]
+    if y is None:
+        for i, group in enumerate(order):
+            folds[i % k].append(group)
+    else:
+        y_arr = np.asarray(list(y))
+        classes = list(np.unique(y_arr))
+        majority = {}
+        for group in order:
+            vals, counts = np.unique(y_arr[index[group]], return_counts=True)
+            majority[group] = vals[int(np.argmax(counts))]
+        tally = [{cls: 0 for cls in classes} for _ in range(k)]
+        for group in order:
+            cls = majority[group]
+            fold = min(range(k), key=lambda i: (tally[i][cls], sum(tally[i].values())))
+            folds[fold].append(group)
+            tally[fold][cls] += len(index[group])
+    pairs = []
+    for i in range(k):
+        if not folds[i]:
+            continue
+        val = np.concatenate([index[group] for group in folds[i]])
+        train_groups = [group for j, fold in enumerate(folds) if j != i for group in fold]
+        if not train_groups:
+            continue
+        train = np.concatenate([index[group] for group in train_groups])
+        pairs.append((np.asarray(train, dtype=int), np.asarray(val, dtype=int)))
+    return pairs
+
+
+def filled_rainfall_values(values, min_share: float | None = None) -> list[float]:
+    """Values repeated on more than `min_share` of the finite training rows."""
+    share = config.FILLED_VALUE_MIN_SHARE if min_share is None else float(min_share)
+    series = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
+    if series.empty:
+        return []
+    counts = series.value_counts()
+    flagged = counts[counts > share * len(series)]
+    return [float(value) for value in flagged.index]
+
+
+def _rain_columns(frame: pd.DataFrame) -> list[str]:
+    return [name for name in ("rainfall", "rainfall_file") if name in frame.columns]
+
+
+def blank_physical_extremes(frame: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Set rainfall above 2,000 mm and elevation below -20 m to NaN. Keep the row."""
+    out = frame.copy()
+    touched = 0
+    for name in _rain_columns(out):
+        rain = pd.to_numeric(out[name], errors="coerce")
+        bad = rain > config.FEATURE_RANGES["rainfall"][1]
+        touched += int(bad.fillna(False).sum())
+        out.loc[bad.fillna(False), name] = np.nan
+    if "elevation" in out.columns:
+        elev = pd.to_numeric(out["elevation"], errors="coerce")
+        bad = elev < config.FEATURE_RANGES["elevation"][0]
+        touched += int(bad.fillna(False).sum())
+        out.loc[bad.fillna(False), "elevation"] = np.nan
+    return out, touched
+
+
+def apply_measurement_mask(frame: pd.DataFrame, filled_rainfall) -> pd.DataFrame:
+    """Blank untrusted rainfall and low elevation, and add missingness indicators.
+
+    `filled_rainfall` must be computed on the training split only.
+    """
+    out = frame.copy()
+    rain_names = _rain_columns(out)
+    if rain_names:
+        missing = pd.Series(False, index=out.index)
+        for name in rain_names:
+            rain = pd.to_numeric(out[name], errors="coerce")
+            col_missing = rain.isna() | (rain > config.FEATURE_RANGES["rainfall"][1])
+            if filled_rainfall:
+                col_missing = col_missing | rain.isin(list(filled_rainfall))
+            missing = missing | col_missing.fillna(False)
+            out.loc[col_missing.fillna(False), name] = np.nan
+        out["rainfall_missing"] = missing.astype(float)
+    if "elevation" in out.columns:
+        elev = pd.to_numeric(out["elevation"], errors="coerce")
+        missing = elev.isna() | (elev < config.FEATURE_RANGES["elevation"][0])
+        out["elevation_missing"] = missing.astype(float)
+        out.loc[missing, "elevation"] = np.nan
+    if "rain_missing" not in out.columns and "rain_annual_mm" in out.columns:
+        out["rain_missing"] = pd.to_numeric(out["rain_annual_mm"], errors="coerce").isna().astype(float)
+    if "pop_missing" not in out.columns and "pop_density_point" in out.columns:
+        out["pop_missing"] = pd.to_numeric(out["pop_density_point"], errors="coerce").isna().astype(float)
+    if (
+        "pop_year_clipped" not in out.columns
+        and "pop_density_point" in out.columns
+        and "year" in out.columns
+    ):
+        year = pd.to_numeric(out["year"], errors="coerce")
+        out["pop_year_clipped"] = ((year < 2000) | (year > 2020)).astype(float)
+    return out
+
+
+def continent_names(lat, lon) -> np.ndarray:
+    """Coarse continent from latitude/longitude boxes. First match wins.
+
+    This is not a coastline. Order: Antarctica (lat < -60); the Americas
+    (lon < -30, North if lat >= 13 else South); Africa (-35..37, -20..52);
+    Europe (lat >= 36, -25..40); Oceania (lat <= 0 and lon >= 110); else Asia.
+    """
+    lat = np.asarray(lat, dtype=np.float64)
+    lon = np.asarray(lon, dtype=np.float64)
+    names = np.array(["Asia"] * len(lat), dtype=object)
+    names[lat < -60] = "Antarctica"
+    americas = (lon < -30) & (lat >= -60)
+    names[americas & (lat >= 13)] = "North America"
+    names[americas & (lat < 13)] = "South America"
+    africa = (lat >= -35) & (lat <= 37) & (lon >= -20) & (lon <= 52)
+    names[africa & (names == "Asia")] = "Africa"
+    europe = (lat >= 36) & (lon >= -25) & (lon <= 40)
+    names[europe & (names == "Asia")] = "Europe"
+    oceania = (lat <= 0) & (lon >= 110)
+    names[oceania & (names == "Asia")] = "Oceania"
+    return names
+
+
+def split_positions(frame: pd.DataFrame, split: str, seed: int, test_size: float | None = None, cell_deg: float | None = None):
+    """Row positions for the holdout. Spatial blocks stay intact.
+
+    When the label is still a score, group assignment uses quantiles of that
+    score as a balance key only. Callers that report classes must refit the
+    cuts on the training rows.
+    """
+    test_size = config.TEST_SIZE if test_size is None else float(test_size)
+    if split == "spatial" and {"latitude", "longitude"} <= set(frame.columns):
+        cell = config.GRID_CELL_DEG if cell_deg is None else float(cell_deg)
+        groups = grid_cell_ids(frame["latitude"], frame["longitude"], cell)
+        if config.TARGET in frame.columns and frame[config.TARGET].notna().any():
+            guide = frame[config.TARGET].to_numpy()
+        elif "flood_hazard_score" in frame.columns:
+            guide, _ignored, _cuts = bin_score_train_quantiles(
+                frame["flood_hazard_score"], frame["flood_hazard_score"]
+            )
+        else:
+            guide = None
+        return group_train_test_split(groups, test_size, seed, y=guide)
+    if config.TARGET in frame.columns and frame[config.TARGET].notna().any():
+        return stratified_indices(frame[config.TARGET].to_numpy(), test_size, seed)
+    rng = np.random.RandomState(int(seed))
+    order = np.arange(len(frame))
+    rng.shuffle(order)
+    n_test = int(round(len(frame) * test_size))
+    n_test = min(max(n_test, 1), len(frame) - 1)
+    return order[n_test:], order[:n_test]
 
 
 def stratified_train_test_split(X, y, test_size: float = 0.2, random_state: int = 42):

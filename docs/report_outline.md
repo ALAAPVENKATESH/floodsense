@@ -4,13 +4,13 @@ Machine Learning (BIC703), Semester VII, Group G2.
 
 Title: Urban Flood Risk Prediction Using a Self-Implemented Random Forest Algorithm.
 
-The tables below are filled from `models/metrics.json` after `python scripts/train.py` on the synthetic 8,000-row table (seed 42). If you retrain on measured CSVs, replace every "SYNTHETIC" number and say so in section 7.
+The tables below are filled from `models/metrics.json` after `python scripts/train.py` on `flood_dataset_classification.csv` (4,186 rows, seed 42, spatial holdout). These are people-affected bins from that file, not surveyed flood performance.
 
 ## 1. Project overview
 
 An academic classifier that maps rainfall, terrain, drainage, land cover, and a historical flood indicator to LOW, MODERATE, or HIGH. The decision tree and the random forest are implemented in `src/flood_rf/` with NumPy. A library forest is not the saved model.
 
-State in the introduction that the submitted run used simulated rows. See section 7.
+State in the introduction that the submitted run used `flood_dataset_classification.csv`. See section 7.
 
 ## 2. Problem statement
 
@@ -39,7 +39,7 @@ Say what is fit on the training split only: medians, modes, category codes, opti
 
 List the nine raw columns and the three engineered formulas from `docs/dataset_documentation.md`. Note that a column absent from a real CSV is dropped, not filled with a made-up measurement.
 
-For this run the model used all twelve columns named in `metrics.json` → `features`.
+For this run the model used rainfall, elevation, slope, latitude, longitude, year, and the two missingness indicators.
 
 ## 6. Output
 
@@ -47,11 +47,11 @@ LOW, MODERATE, HIGH. The app also shows class probabilities (mean of the trees' 
 
 ## 7. Dataset
 
-**This run: SYNTHETIC.** 8,000 rows, seed 42. Class counts: LOW 2,747, MODERATE 2,655, HIGH 2,598. Figure: `reports/figures/class_distribution.png`.
+**This run: CLASSIFICATION.** 4,186 flood-positive rows from `flood_dataset_classification.csv`, seed 42. Class counts: LOW 1,738, MODERATE 1,401, HIGH 1,047. Figure: `reports/figures/class_distribution.png`.
 
-No file was taken from the National Water Data Portal or Bhuvan. Those remain the intended sources if the group adds CSVs. Record version, coverage, period, and licence in `docs/dataset_documentation.md` before claiming a measured result.
+Source: the local file. No agency is cited. Not India-WRIS and not Bhuvan. Other disaster types (2,045 rows) are excluded. They are not called LOW. `time` is a calendar year from 1900 to 2016. Coordinates cover the globe in 484 cells of 5°.
 
-Label rule for this table: latent score quantiles 0.34 and 0.67, then 6% cycled label noise. The score is not a column in the CSV.
+Label rule: people affected. Spatial-training quantiles 0.40 and 0.75 land at 3,000 and 55,700. LOW at or below 3,000, MODERATE at or below 55,700, otherwise HIGH. The score is not a column the forest sees. Rainfall equal to 1,383.125626 mm on the training split (13.0% of those rows), rainfall above 2,000 mm, and elevation below −20 m are missing values plus an indicator, not deleted rows.
 
 ## 8. Machine learning design
 
@@ -59,7 +59,7 @@ Describe, with the code as the reference:
 
 - Bootstrap sample per tree, with a seed derived from 42
 - Gini impurity
-- At each split, a random feature subset (`max_features=0.5` in the chosen model, so 6 of 12 columns)
+- At each split, a random feature subset (`max_features=0.5` in the chosen model)
 - Midpoint thresholds between sorted unique values
 - Stop on depth, minimum samples, a pure node, or no split with positive gain
 - Final prediction by majority vote
@@ -69,16 +69,18 @@ Search on the training split only (15 trees each). Validation macro-F1:
 
 | max_depth | min_samples_leaf | max_features | Validation macro-F1 |
 | ---: | ---: | --- | ---: |
-| 6 | 12 | sqrt | 0.609 |
-| 8 | 8 | sqrt | 0.614 |
-| 10 | 5 | sqrt | 0.607 |
-| 8 | 8 | 0.5 | 0.615 |
+| 6 | 12 | sqrt | 0.436 |
+| 8 | 8 | sqrt | 0.433 |
+| 10 | 5 | sqrt | 0.437 |
+| 8 | 8 | log2 | 0.444 |
+| 8 | 8 | 0.5 | 0.452 |
+| 8 | 8 | 1.0 | 0.439 |
 
-The last row was selected. It was refit with 40 trees. Figure: `reports/figures/depth_curve.png`. Out-of-bag accuracy by number of trees: `reports/figures/learning_curve.png` (0.558 at 5 trees, 0.604 at 40).
+The search objective is macro-F1, so the three classes count equally. Quadratic weighted kappa is reported and was not the selection score. Depth 8, leaf 8, and `max_features=0.5` won. On that structure, 40 trees with balanced weights (validation macro-F1 0.459) beat 40 trees with no weights (0.451) and beat 20 trees. Figure: `reports/figures/depth_curve.png`. Out-of-bag accuracy on the final fit is 0.486.
 
 ## 9. Application design
 
-Streamlit page with Prediction, Model performance, Feature importance, Dataset, and About. Inputs are checked against the training min and max. Invalid values produce an error and no prediction. Footer disclaimer on every view. Synthetic banner when `data_source` is not REAL.
+FloodSense pages: Dashboard, Predict, Batch analysis, Model insights, Dataset, and About. Inputs are checked against the training min and max. Invalid values produce an error and no prediction. Footer disclaimer on every view. A classification-table banner stays up because `data_source` is not REAL.
 
 Screenshots to paste: the prediction panel for a high-risk example, and the performance tab.
 
@@ -92,34 +94,43 @@ Python, NumPy 2.1.3, pandas 2.2.3, Matplotlib 3.9.2, Streamlit 1.40.2. scikit-le
 
 ## 12. Evaluation
 
-Held-out test, 1,600 rows (20%). Majority-class accuracy on that split: 0.343.
+Headline holdout: 837 rows in cells the training split did not see. Same 3,349 / 837 cells as the previous headline. Majority-class accuracy on that split: 0.417. Stratified random guess: 0.331.
 
-| Split | Accuracy | Macro precision | Macro recall | Macro F1 |
-| --- | ---: | ---: | ---: | ---: |
-| Train | 0.713 | 0.727 | 0.714 | 0.716 |
-| Test | 0.617 | 0.632 | 0.617 | 0.622 |
+| Comparison | Accuracy | Macro F1 | QWK |
+| --- | ---: | ---: | ---: |
+| Previous 3-feature random split | 0.388 | 0.372 | — |
+| Random split (optimistic, leakage-prone; includes year) | 0.519 | 0.512 | 0.343 |
+| Spatial test (headline, with CHIRPS) | 0.470 | 0.449 | 0.243 |
+| Previous feature set, same cells | 0.470 | 0.459 | 0.242 |
+| Majority class | 0.417 | 0.196 | 0.000 |
+| Stratified random guess | 0.331 | 0.320 | −0.019 |
 
-Train minus test accuracy gap: 0.096. Out-of-bag accuracy: 0.604. Fit and search: 50.8 seconds.
+The previous-feature row refits file rainfall, elevation, slope, latitude, longitude, year, and the two file missingness flags with the old hyperparameters (40 trees, depth 8, leaf 8, `max_features=0.5`, balanced weights). It matches the published 0.470 / 0.459 / 0.242. The new headline uses CHIRPS columns and the population flags. Population measurements are missing on every row.
 
-Test per class:
+Train accuracy on the spatial fit: 0.589. Train minus test accuracy gap: 0.120. Out-of-bag accuracy: 0.482. Adjacent accuracy 0.811. Mean absolute class error 0.719. Severe-error rate 0.189. Bootstrap 95% interval on the headline predictions: accuracy 0.436–0.504, macro F1 0.416–0.483.
 
-| Class | Precision | Recall | F1 | Support |
-| --- | ---: | ---: | ---: | ---: |
-| LOW | 0.720 | 0.617 | 0.665 | 549 |
-| MODERATE | 0.474 | 0.569 | 0.517 | 531 |
-| HIGH | 0.703 | 0.665 | 0.684 | 520 |
+Five reruns that reseed the split and the forest: accuracy 0.461 ± 0.010, macro F1 0.439 ± 0.018, QWK 0.242 ± 0.014.
+
+Ablation under the chosen hyperparameters, same spatial split (`reports/ablation.csv`):
+
+| Features | Accuracy | Macro F1 | QWK |
+| --- | ---: | ---: | ---: |
+| rainfall, elevation, slope | 0.421 | 0.236 | 0.032 |
+| + latitude, longitude | 0.470 | 0.443 | 0.243 |
+| + year | 0.468 | 0.452 | 0.236 |
+| + missingness indicators (previous feature set) | 0.479 | 0.457 | 0.242 |
+
+CHIRPS and the empty population columns are in `reports/ablation_external.csv` and the README experiment log. CHIRPS does not beat latitude and longitude. The set without coordinates scores 0.415 accuracy, on the majority baseline. Population was not sampled.
 
 Confusion matrix (true by predicted), figure `reports/figures/confusion_matrix.png`:
 
 |  | LOW | MODERATE | HIGH |
 | --- | ---: | ---: | ---: |
-| LOW | 339 | 175 | 35 |
-| MODERATE | 118 | 302 | 111 |
-| HIGH | 14 | 160 | 346 |
+| LOW | 205 | 53 | 91 |
+| MODERATE | 130 | 69 | 79 |
+| HIGH | 67 | 24 | 119 |
 
-Discuss the moderate class: it sits between the two score quantiles, so rainfall and elevation that are only slightly unusual fall here, and 6% label noise hits this boundary hardest. LOW and HIGH are rarely confused with each other (35 and 14 cells).
-
-Write one sentence that these figures are simulator scores.
+Spatial accuracy is above the majority baseline. File rainfall, elevation, and slope alone are not. The gain appears when latitude and longitude are added. Say that the label is people affected, so a coordinate can stand in for where people were recorded. These figures are not a surveyed city. A 15° holdout scores 0.504 accuracy, which is higher because the regions change. Leaving out one continent drops the row-weighted accuracy to 0.397.
 
 ## 13. Explainability
 
@@ -127,13 +138,17 @@ Impurity importance, normalized to sum to 1, averaged across trees. Figure: `rep
 
 | Feature | Impurity share |
 | --- | ---: |
-| rainfall_x_impervious | 0.241 |
-| drainage_density | 0.142 |
-| elevation_relative_to_water | 0.107 |
-| elevation | 0.100 |
-| impervious_area | 0.086 |
+| longitude | 0.224 |
+| latitude | 0.214 |
+| elevation | 0.097 |
+| rainfall_file | 0.086 |
+| slope | 0.082 |
+| rain_wet_month_share | 0.081 |
+| rain_anomaly | 0.077 |
+| rain_max_month_mm | 0.069 |
+| rain_annual_mm | 0.059 |
 
-Permutation importance on a held-out subsample (`reports/figures/permutation_importance.png`) puts the same three features first. `rainfall` alone is about zero because `rainfall_x_impervious` and `cumulative_rainfall` already use it.
+Permutation importance on the spatial holdout is latitude 0.063 and longitude 0.058. Slope is 0.006 and elevation is 0.004. Every rainfall column is about zero or slightly negative (`rain_anomaly` −0.010). The three population measurements and `pop_missing` are exactly zero. `pop_year_clipped` is a year flag, not a count of people.
 
 Required sentence: feature importance reflects model behavior, not proof of causation.
 
@@ -142,7 +157,7 @@ The prediction panel also lists features that appear most often on the path take
 ## 14. Non-functional requirements
 
 - The interface is one page with five tabs and labeled inputs.
-- The full training run finished in 50.8 seconds. A single prediction is a walk down 40 trees.
+- The full training run, including the comparison splits and five seeds, finished in about 13 minutes. A single prediction is a walk down 40 trees.
 - Inputs outside the training range are rejected with a visible message.
 - Rebuild with the commands in the README, the pinned requirements, seed 42, and `docs/dataset_documentation.md`.
 
@@ -151,7 +166,7 @@ The prediction panel also lists features that appear most often on the path take
 | Deliverable | Path |
 | --- | --- |
 | Source | `src/flood_rf/`, `scripts/`, `app/` |
-| Dataset | `data/processed/dataset.csv`, `flood_synthetic.csv`, `dataset_meta.json` |
+| Dataset | `flood_dataset_classification.csv`, `data/raw/flood_classification.csv`, `data/processed/dataset.csv`, `dataset_meta.json` |
 | Dependencies | `requirements.txt` |
 | Report | this outline, to be written up from these numbers |
 | Demo | `streamlit run app/streamlit_app.py` |
@@ -169,6 +184,7 @@ Close the report with the academic disclaimer. Say what would be required before
 
 ## Suggested discussion points
 
-- Why the forest beats a majority baseline (0.617 vs 0.343) and why that still is not a field validation.
-- Why the train/test gap of about 0.10 is acceptable here, and which search row was slightly more overfit (depth 10, leaf 5, validation macro-F1 0.607).
+- Spatial accuracy (0.470) beats the majority baseline (0.417). The previous feature set on the same cells is 0.470 accuracy and 0.459 macro F1. Adding CHIRPS keeps the accuracy and lowers macro F1 to 0.449. The random split (0.519) is higher because nearby records leak, and that split also includes year.
+- The label is people affected. The file rainfall contains a filled value. File rainfall and CHIRPS correlate at 0.799 on 2,542 rows, and the model still does not use rainfall to lift the score. Latitude and longitude carry the model. WorldPop was not downloaded, so this run does not test exposure.
+- CHIRPS does not beat latitude and longitude (paired accuracy −0.010 ± 0.013). Without coordinates, accuracy is 0.415. A coarser 15° holdout scores 0.504 because the regions change. Leaving out a continent drops weighted accuracy to 0.397.
 - Why a self-implemented forest was required, and where scikit-learn is allowed to appear (tests and `scripts/benchmark_vs_sklearn.py` only).

@@ -1,16 +1,18 @@
 {
-  "data_source": "SYNTHETIC",
-  "warning": "SYNTHETIC DATA: this dataset was simulated for coursework. It is not measured rainfall, terrain, or flood history. Do not report these metrics as real-world performance.",
-  "n_rows": 8000,
-  "class_counts": {
-    "LOW": 2747,
-    "MODERATE": 2655,
-    "HIGH": 2598
-  },
-  "label_rule": "Synthetic latent score binned at quantiles 0.34 and 0.67 of the generated table (LOW / MODERATE / HIGH), then 6% cycled label noise. Not a measured hazard class.",
-  "files": [],
-  "generator_seed": 42,
+  "data_source": "CLASSIFICATION",
+  "warning": "CLASSIFICATION: flood_dataset_classification.csv, flood-positive rows only. Classes are train-only quantiles of people affected, not a surveyed water depth. Rainfall contains repeated filled values. Do not report these metrics as real-world performance.",
+  "coverage": "Local file flood_dataset_classification.csv. Global coordinates and a year column. No agency or licence is cited in the file. Distance was left out: most values are 0 and the rest are far outside 0\u2013500 km.",
+  "n_rows": 4186,
+  "class_counts": {},
+  "label_rule": "Flood-positive rows only (occured = 1, which matches Disaster Type 0). Total Affected is the score. scripts/train.py bins it with quantiles (0.4, 0.75) fit on the training split only, then drops it. Deaths, affected, disaster type, and occured are not model inputs.",
+  "label_score_column": "flood_hazard_score",
   "excluded_features": [],
+  "files": [
+    "flood_classification.csv"
+  ],
+  "merge": "single file",
+  "dropped_overlapping_columns": [],
   "dropped_invalid": 0,
-  "dropped_duplicates": 0
+  "masked_extremes": 770,
+  "dropped_duplicates": 6
 }

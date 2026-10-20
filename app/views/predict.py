@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import datetime
 
 import numpy as np
@@ -18,6 +20,10 @@ from app.ui.theme import GROUPS, UNITS, chart_theme, display_name
 from app.views._frame import header, require_model
 
 _CAVEAT = "Prediction reflects model behavior on training data, not a guarantee."
+_EXPOSURE = (
+    "Predictions depend on location and exposure data; "
+    "weak sensitivity to one input does not mean the model is broken."
+)
 
 
 def page() -> None:
@@ -28,6 +34,7 @@ def page() -> None:
         render(callout(_CAVEAT))
         return
     _ensure_inputs(fitted)
+    render(callout(_EXPOSURE))
     record = {feature: float(st.session_state[feature]) for feature in fitted.base_features}
     errors = fitted.validate(record)
     left, right = st.columns([1.05, 0.95], gap="medium")
@@ -53,6 +60,9 @@ def _ensure_inputs(fitted) -> None:
             if preset:
                 _write(fitted, preset)
             st.session_state["_applied_preset"] = choice
+    looked = st.session_state.pop("_lookup_values", None)
+    if looked:
+        _write(fitted, looked)
     defaults = fitted.extra.get("defaults") or {}
     for feature in fitted.base_features:
         if feature in st.session_state and f"{feature}__s" in st.session_state:
@@ -62,7 +72,7 @@ def _ensure_inputs(fitted) -> None:
 
 def _write(fitted, values: dict) -> None:
     for feature, raw in values.items():
-        if feature not in fitted.base_features:
+        if feature not in fitted.base_features or raw is None:
             continue
         low, high = _widget_bounds(feature)
         value = min(max(snap(float(raw), low, input_step(feature)), low), high)
@@ -158,17 +168,91 @@ def _inputs(fitted, record: dict) -> None:
                         help=help_text,
                     )
                 if train and (record[feature] < float(train[0]) or record[feature] > float(train[1])):
-                    render(
-                        alert(
+                    if feature in {"latitude", "longitude", "year"}:
+                        message = (
+                            f"{display_name(feature)} is outside the training coverage "
+                            f"{float(train[0]):.4g}–{float(train[1]):.4g}. Prediction refused."
+                        )
+                    else:
+                        message = (
                             f"{display_name(feature)} is outside the training range "
                             f"{float(train[0]):.4g}–{float(train[1]):.4g}. Prediction refused."
                         )
-                    )
+                    render(alert(message))
+        year = _lookup_year(fitted, record)
+        _coverage(record, year)
+        _lookup(fitted, record, year)
         reset, _spacer = st.columns([1, 2])
         with reset:
             if st.button("Reset", use_container_width=True):
                 st.session_state["_reset"] = True
                 st.rerun()
+
+
+def _lookup_year(fitted, record: dict) -> float | None:
+    """Year is not a saved-model input. The satellite lookup still needs one."""
+    if "year" in record:
+        return float(record["year"])
+    if not {"latitude", "longitude"} <= set(fitted.base_features) or not _rasters_present():
+        return None
+    if "lookup_year" not in st.session_state:
+        st.session_state["lookup_year"] = 2010
+    return float(
+        st.number_input("Year for the satellite lookup", min_value=1900, max_value=2020, step=1, key="lookup_year")
+    )
+
+
+def _coverage(record: dict, year: float | None) -> None:
+    lat = record.get("latitude")
+    if year is not None and year < 1981:
+        render(alert("CHIRPS rainfall starts in 1981. This year has no satellite rainfall."))
+    if year is not None and (year < 2000 or year > 2020):
+        render(alert("Population is clipped to the WorldPop range 2000–2020."))
+    if lat is not None and (lat < -50 or lat > 50):
+        render(alert("CHIRPS covers 50°S to 50°N. This latitude is outside that grid."))
+
+
+def _rasters_present() -> bool:
+    root = config.ROOT / "data" / "external"
+    chirps = root / "chirps"
+    pop = root / "worldpop"
+    has_chirps = chirps.exists() and any(chirps.glob("chirps-v2.0.*.tif.gz"))
+    has_pop = pop.exists() and any(pop.glob("ppp_*_1km_Aggregated.tif"))
+    return has_chirps or has_pop
+
+
+def _apply_lookup(lat: float, lon: float, year: float) -> None:
+    script = config.ROOT / "scripts" / "build_external_features.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), "--lookup", str(lat), str(lon), str(int(year))],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        cwd=str(config.ROOT),
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+        st.session_state["_lookup_error"] = (proc.stderr or proc.stdout or "lookup failed")[-400:]
+        return
+    st.session_state["_lookup_values"] = json.loads(proc.stdout)
+    st.session_state["_lookup_error"] = ""
+
+
+def _lookup(fitted, record: dict, year: float | None) -> None:
+    if not {"latitude", "longitude"} <= set(fitted.base_features):
+        return
+    if not _rasters_present():
+        st.caption("Look up from satellite data is hidden until CHIRPS or WorldPop files are in data/external/.")
+        return
+    if year is None:
+        return
+    st.button(
+        "Look up from satellite data",
+        on_click=_apply_lookup,
+        args=(record["latitude"], record["longitude"], year),
+    )
+    error = st.session_state.get("_lookup_error")
+    if error:
+        render(alert(error))
 
 
 def _result(fitted, record: dict, errors: list[str]) -> None:

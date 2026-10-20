@@ -53,7 +53,7 @@ def page() -> None:
             """
 - This is a coursework classifier. It is not a flood warning system.
 - A real deployment would need validated operational data, spatial and temporal checks, uncertainty estimates, and review by people who work on floods.
-- When the banner says synthetic, the scores describe the simulator, not a city.
+- When the banner is up, the scores are not a surveyed flood record.
 - Feature importance is model behavior, not a cause of flooding.
 - Live rainfall, sensors, automated alerts, and a mobile app are out of scope.
             """

@@ -55,11 +55,11 @@ def status_chips(source: str, n_trees: int | None) -> list[tuple[str, str]]:
     ]
 
 
-def banner(text: str) -> str:
+def banner(text: str, title: str = "Synthetic dataset") -> str:
     """Persistent amber notice. The mark is a label, not a close control."""
     return (
         "<div class='fs-banner'><div>"
-        "<strong>Synthetic dataset</strong>"
+        f"<strong>{escape(title)}</strong>"
         f"<span>{escape(text)}</span></div>"
         "<div class='fs-banner-x' title='This notice stays on every page'>×</div></div>"
     )

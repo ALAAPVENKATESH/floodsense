@@ -43,6 +43,8 @@ Python 3.10 or newer. Dependencies are pinned in `requirements.txt`.
 ## Data and labels
 
 - Empty `data/raw/` means synthetic. Do not download India-WRIS or Bhuvan data unless the user asks.
+- `data/raw/flood_classification.csv` is written by `scripts/prepare_classification.py` from `flood_dataset_classification.csv`. Keep `data_source = CLASSIFICATION`. Do not relabel it REAL. The label is people affected on flood-positive rows, binned on the training split only.
+- `data/raw/urbanfloodbench.csv` is HEC-RAS output from Kaggle `jiayulim/urbanfloodbench`. Keep `data_source = URBANFLOODBENCH`. Do not relabel it REAL or SYNTHETIC. Do not leave it in `data/raw/` next to `flood_classification.csv`; the files do not share a key.
 - If a real file already has `risk_class`, keep it. If the only label is a 0–1 hazard score, the documented cuts are 0.33 and 0.66. Other scores are binned on the training split only.
 - `elevation_relative_to_water` is elevation times distance, not a surveyed water height.
 - The app refuses inputs outside the training range. It does not clip them and still predict.

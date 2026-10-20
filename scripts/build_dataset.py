@@ -22,7 +22,13 @@ if str(SRC) not in sys.path:
 
 import config
 import generate_synthetic_data as synthetic
-from flood_rf.preprocessing import bin_unit_score, drop_duplicate_rows, normalize_label, remove_invalid_rows
+from flood_rf.preprocessing import (
+    bin_unit_score,
+    blank_physical_extremes,
+    drop_duplicate_rows,
+    normalize_label,
+    remove_invalid_rows,
+)
 
 
 def normalize_columns(frame: pd.DataFrame) -> pd.DataFrame:
@@ -118,6 +124,19 @@ def apply_labels(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     raise SystemExit("No risk_class, flood_hazard_score, or historical_flood column to label rows.")
 
 
+def merge_external(frame: pd.DataFrame, external: pd.DataFrame) -> pd.DataFrame:
+    """Left-join external features on row_id. Row count and order stay put."""
+    if "row_id" not in frame.columns or external is None or external.empty:
+        return frame
+    order = frame["row_id"].tolist()
+    extra = external.drop_duplicates("row_id", keep="first")
+    columns = ["row_id"] + [column for column in extra.columns if column not in frame.columns]
+    merged = frame.merge(extra[columns], on="row_id", how="left")
+    if len(merged) != len(frame) or merged["row_id"].tolist() != order:
+        raise RuntimeError("external feature merge changed the row count or order")
+    return merged
+
+
 def _keep(frame: pd.DataFrame) -> pd.DataFrame:
     wanted = (
         config.ID_COLUMNS
@@ -174,15 +193,39 @@ def build(raw_dir: Path | None = None, out_dir: Path | None = None, n_synthetic:
     merged, how, dropped_overlap = merge_frames(frames)
     merged = _coerce(merged)
     merged, label_info = apply_labels(merged)
-    if config.SOURCE_COLUMN in merged.columns and set(merged[config.SOURCE_COLUMN].astype(str).str.upper()) == {"SYNTHETIC"}:
+    tags = set()
+    if config.SOURCE_COLUMN in merged.columns:
+        tags = set(merged[config.SOURCE_COLUMN].astype(str).str.upper())
+    if tags == {"SYNTHETIC"}:
         source = "SYNTHETIC"
         print(config.SYNTHETIC_WARNING, file=sys.stderr)
+    elif tags == {config.BENCHMARK_SOURCE}:
+        source = config.BENCHMARK_SOURCE
+        merged[config.SOURCE_COLUMN] = config.BENCHMARK_SOURCE
+        label_info["label_rule"] = config.BENCHMARK_LABEL_RULE
+        print(config.BENCHMARK_WARNING, file=sys.stderr)
+    elif tags == {config.CLASSIFICATION_SOURCE}:
+        source = config.CLASSIFICATION_SOURCE
+        merged[config.SOURCE_COLUMN] = config.CLASSIFICATION_SOURCE
+        label_info["label_rule"] = config.CLASSIFICATION_LABEL_RULE
+        print(config.CLASSIFICATION_WARNING, file=sys.stderr)
     else:
         merged[config.SOURCE_COLUMN] = "REAL"
         source = "REAL"
+    external_path = out_dir / "external_features.csv"
+    if external_path.exists() and "row_id" in merged.columns:
+        merged = merge_external(merged, pd.read_csv(external_path))
+        print(f"merged {external_path.name} on row_id", flush=True)
+    elif "row_id" in merged.columns:
+        print("no data/processed/external_features.csv; external rainfall and population stay absent", flush=True)
+    if "year" not in merged.columns and "period" in merged.columns:
+        years = pd.to_numeric(merged["period"], errors="coerce")
+        if years.notna().any() and years.dropna().between(1800, 2100).all():
+            merged["year"] = years
     ranges = dict(config.FEATURE_RANGES)
     if label_info.get("label_score_column"):
         ranges.pop(label_info["label_score_column"], None)
+    merged, n_masked = blank_physical_extremes(merged)
     merged, n_invalid = remove_invalid_rows(merged, ranges)
     if config.TARGET in merged.columns:
         merged = merged[merged[config.TARGET].notna()].reset_index(drop=True)
@@ -191,11 +234,15 @@ def build(raw_dir: Path | None = None, out_dir: Path | None = None, n_synthetic:
         merged = merged.loc[~unknown].reset_index(drop=True)
     else:
         n_unknown = 0
-    merged, n_dupes = drop_duplicate_rows(merged)
+    duplicate_on = [column for column in merged.columns if column not in {"row_id", "pop_source_year"}]
+    merged, n_dupes = drop_duplicate_rows(merged, subset=duplicate_on or None)
     merged = _keep(merged)
     if merged.empty:
         raise SystemExit("No rows left after cleaning the raw CSVs.")
     merged.to_csv(dataset_path, index=False)
+    synthetic_path = out_dir / "flood_synthetic.csv"
+    if source != "SYNTHETIC" and synthetic_path.exists():
+        synthetic_path.unlink()
     counts = (
         merged[config.TARGET].value_counts().to_dict()
         if config.TARGET in merged.columns
@@ -203,7 +250,14 @@ def build(raw_dir: Path | None = None, out_dir: Path | None = None, n_synthetic:
     )
     meta = {
         "data_source": source,
-        "warning": config.SYNTHETIC_WARNING if source == "SYNTHETIC" else "",
+        "warning": config.warning_for(source),
+        "coverage": (
+            config.BENCHMARK_COVERAGE
+            if source == config.BENCHMARK_SOURCE
+            else config.CLASSIFICATION_COVERAGE
+            if source == config.CLASSIFICATION_SOURCE
+            else ""
+        ),
         "n_rows": int(len(merged)),
         "class_counts": {str(k): int(v) for k, v in counts.items()},
         "label_rule": label_info["label_rule"],
@@ -213,8 +267,15 @@ def build(raw_dir: Path | None = None, out_dir: Path | None = None, n_synthetic:
         "merge": how,
         "dropped_overlapping_columns": dropped_overlap,
         "dropped_invalid": n_invalid + n_unknown,
+        "masked_extremes": n_masked,
         "dropped_duplicates": n_dupes,
     }
+    note_path = raw_dir / "urbanfloodbench_note.json"
+    if source == config.BENCHMARK_SOURCE and note_path.exists():
+        note = json.loads(note_path.read_text(encoding="utf-8"))
+        for key in ("rows_before_sample", "sample_cap", "models", "events", "units"):
+            if key in note:
+                meta[key] = note[key]
     _write_meta(meta_path, meta)
     return meta
 
@@ -224,7 +285,7 @@ def main() -> None:
     print(f"data_source={meta['data_source']} rows={meta['n_rows']}")
     print(meta["label_rule"])
     if meta["data_source"] != "REAL":
-        print(config.SYNTHETIC_WARNING, file=sys.stderr)
+        print(config.warning_for(meta["data_source"]), file=sys.stderr)
 
 
 if __name__ == "__main__":
