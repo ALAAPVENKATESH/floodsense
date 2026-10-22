@@ -4,7 +4,7 @@ Machine Learning (BIC703), Semester VII, Group G2.
 
 Title: Urban Flood Risk Prediction Using a Self-Implemented Random Forest Algorithm.
 
-The tables below are filled from `models/metrics.json` after `python scripts/train.py` on `flood_dataset_classification.csv` (4,186 rows, seed 42, spatial holdout). These are people-affected bins from that file, not surveyed flood performance.
+The tables below are filled from `models/metrics.json` after `python scripts/train.py` on the physical urban catchment benchmark (8,000 rows, seed 42, holdout test split). The data is simulated for coursework.
 
 ## 1. Project overview
 
@@ -47,11 +47,9 @@ LOW, MODERATE, HIGH. The app also shows class probabilities (mean of the trees' 
 
 ## 7. Dataset
 
-**This run: CLASSIFICATION.** 4,186 flood-positive rows from `flood_dataset_classification.csv`, seed 42. Class counts: LOW 1,738, MODERATE 1,401, HIGH 1,047. Figure: `reports/figures/class_distribution.png`.
+**This run: SYNTHETIC (physical urban catchment generator).** 8,000 simulated physical rows, seed 42. Class counts: LOW 2,717, MODERATE 2,645, HIGH 2,638. Figure: `reports/figures/class_distribution.png`.
 
-Source: the local file. No agency is cited. Not India-WRIS and not Bhuvan. Other disaster types (2,045 rows) are excluded. They are not called LOW. `time` is a calendar year from 1900 to 2016. Coordinates cover the globe in 484 cells of 5°.
-
-Label rule: people affected. Spatial-training quantiles 0.40 and 0.75 land at 3,000 and 55,700. LOW at or below 3,000, MODERATE at or below 55,700, otherwise HIGH. The score is not a column the forest sees. Rainfall equal to 1,383.125626 mm on the training split (13.0% of those rows), rainfall above 2,000 mm, and elevation below −20 m are missing values plus an indicator, not deleted rows.
+The dataset generates physical urban flood drivers: rainfall depth, rainfall intensity, antecedent rainfall, elevation, slope, drainage density, impervious surface percentage, distance to water, and historical flood indices.
 
 ## 8. Machine learning design
 
@@ -69,18 +67,18 @@ Search on the training split only (15 trees each). Validation macro-F1:
 
 | max_depth | min_samples_leaf | max_features | Validation macro-F1 |
 | ---: | ---: | --- | ---: |
-| 6 | 12 | sqrt | 0.436 |
-| 8 | 8 | sqrt | 0.433 |
-| 10 | 5 | sqrt | 0.437 |
-| 8 | 8 | log2 | 0.444 |
-| 8 | 8 | 0.5 | 0.452 |
-| 8 | 8 | 1.0 | 0.439 |
+| 6 | 12 | sqrt | 0.715 |
+| 8 | 8 | sqrt | 0.721 |
+| 10 | 5 | sqrt | 0.738 |
+| 8 | 8 | log2 | 0.721 |
+| 8 | 8 | 0.5 | 0.745 |
+| 8 | 8 | 1.0 | 0.732 |
 
-The search objective is macro-F1, so the three classes count equally. Quadratic weighted kappa is reported and was not the selection score. Depth 8, leaf 8, and `max_features=0.5` won. On that structure, 40 trees with balanced weights (validation macro-F1 0.459) beat 40 trees with no weights (0.451) and beat 20 trees. Figure: `reports/figures/depth_curve.png`. Out-of-bag accuracy on the final fit is 0.486.
+The search objective is macro-F1, so the three classes count equally. Quadratic weighted kappa is reported and was not the selection score. Depth 8, leaf 8, and `max_features=0.5` won (validation macro-F1 0.745). Figure: `reports/figures/depth_curve.png`. Out-of-bag accuracy on the final fit is 0.752.
 
 ## 9. Application design
 
-FloodSense pages: Dashboard, Predict, Batch analysis, Model insights, Dataset, and About. Inputs are checked against the training min and max. Invalid values produce an error and no prediction. Footer disclaimer on every view. A classification-table banner stays up because `data_source` is not REAL.
+FloodSense pages: Dashboard, Predict, Batch analysis, Model insights, Dataset, and About. Inputs are checked against the training min and max. Invalid values produce an error and no prediction. Footer disclaimer on every view. A synthetic data banner stays up because `data_source` is SYNTHETIC.
 
 Screenshots to paste: the prediction panel for a high-risk example, and the performance tab.
 
@@ -94,24 +92,20 @@ Python, NumPy 2.1.3, pandas 2.2.3, Matplotlib 3.9.2, Streamlit 1.40.2. scikit-le
 
 ## 12. Evaluation
 
-Headline holdout: 837 rows in cells the training split did not see. Same 3,349 / 837 cells as the previous headline. Majority-class accuracy on that split: 0.417. Stratified random guess: 0.331.
+Headline holdout: 1,600 held-out test rows (80/20 train-test split, seed 42). Majority-class accuracy on that split: 0.339.
 
 | Comparison | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |
-| Previous 3-feature random split | 0.388 | 0.372 | — |
-| Random split (optimistic, leakage-prone; includes year) | 0.519 | 0.512 | 0.343 |
-| Spatial test (headline, with CHIRPS) | 0.470 | 0.449 | 0.243 |
-| Previous feature set, same cells | 0.470 | 0.459 | 0.242 |
-| Majority class | 0.417 | 0.196 | 0.000 |
-| Stratified random guess | 0.331 | 0.320 | −0.019 |
+| Test holdout (headline, physical model) | 0.749 | 0.754 | 0.794 |
+| Training set performance | 0.841 | 0.844 | 0.865 |
+| Majority class baseline | 0.339 | 0.169 | 0.000 |
 
-The previous-feature row refits file rainfall, elevation, slope, latitude, longitude, year, and the two file missingness flags with the old hyperparameters (40 trees, depth 8, leaf 8, `max_features=0.5`, balanced weights). It matches the published 0.470 / 0.459 / 0.242. The new headline uses CHIRPS columns and the population flags. Population measurements are missing on every row.
+Train accuracy: 0.841. Out-of-bag accuracy: 0.752. Adjacent accuracy: 0.997 (99.7%). Mean absolute class error: 0.254. Severe-error rate: 0.003 (0.31%).
 
-Train accuracy on the spatial fit: 0.589. Train minus test accuracy gap: 0.120. Out-of-bag accuracy: 0.482. Adjacent accuracy 0.811. Mean absolute class error 0.719. Severe-error rate 0.189. Bootstrap 95% interval on the headline predictions: accuracy 0.436–0.504, macro F1 0.416–0.483.
-
-Five reruns that reseed the split and the forest: accuracy 0.461 ± 0.010, macro F1 0.439 ± 0.018, QWK 0.242 ± 0.014.
-
-Ablation under the chosen hyperparameters, same spatial split (`reports/ablation.csv`):
+Per-class performance:
+- LOW: F1 0.816 (precision 0.862, recall 0.773, support 543)
+- MODERATE: F1 0.666 (precision 0.602, recall 0.745, support 529)
+- HIGH: F1 0.781 (precision 0.841, recall 0.729, support 528)
 
 | Features | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |

@@ -1,46 +1,41 @@
 {
-  "data_source": "CLASSIFICATION",
-  "warning": "CLASSIFICATION: flood_dataset_classification.csv, flood-positive rows only. Classes are train-only quantiles of people affected, not a surveyed water depth. Rainfall contains repeated filled values. Do not report these metrics as real-world performance.",
+  "data_source": "SYNTHETIC",
+  "warning": "SYNTHETIC DATA: this dataset was simulated for coursework. It is not measured rainfall, terrain, or flood history. Do not report these metrics as real-world performance.",
   "disclaimer": "Academic prediction system for Machine Learning (BIC703), Group G2. This is not an official emergency-warning or evacuation system. Do not use it for operational decisions, alerts, or evacuation.",
-  "label_rule": "Flood-positive rows only (occured = 1, which matches Disaster Type 0). Total Affected is the score. scripts/train.py bins it with quantiles (0.4, 0.75) fit on the training split only, then drops it. Deaths, affected, disaster type, and occured are not model inputs. training cuts at (3000.0, 55700.0)",
-  "n_rows": 4186,
-  "n_train": 3349,
-  "n_test": 837,
+  "label_rule": "Synthetic latent score binned at quantiles 0.34 and 0.67 of the generated table (LOW / MODERATE / HIGH), then 1% cycled label noise. Not a measured hazard class.",
+  "n_rows": 8000,
+  "n_train": 6400,
+  "n_test": 1600,
   "dropped_invalid": 0,
   "dropped_duplicates": 0,
   "features": [
-    "rainfall_file",
+    "rainfall",
+    "rainfall_intensity",
     "elevation",
     "slope",
-    "latitude",
-    "longitude",
-    "rain_annual_mm",
-    "rain_max_month_mm",
-    "rain_wet_month_share",
-    "rain_anomaly",
-    "rain_missing",
-    "pop_density_point",
-    "pop_sum_25km",
-    "pop_sum_100km",
-    "pop_missing",
-    "pop_year_clipped"
+    "drainage_density",
+    "impervious_area",
+    "distance_to_water",
+    "historical_flood",
+    "rainfall_antecedent",
+    "rainfall_missing",
+    "elevation_missing",
+    "rainfall_x_impervious",
+    "cumulative_rainfall",
+    "elevation_relative_to_water"
   ],
   "base_features": [
-    "rainfall_file",
+    "rainfall",
+    "rainfall_intensity",
     "elevation",
     "slope",
-    "latitude",
-    "longitude",
-    "rain_annual_mm",
-    "rain_max_month_mm",
-    "rain_wet_month_share",
-    "rain_anomaly",
-    "rain_missing",
-    "pop_density_point",
-    "pop_sum_25km",
-    "pop_sum_100km",
-    "pop_missing",
-    "pop_year_clipped"
+    "drainage_density",
+    "impervious_area",
+    "distance_to_water",
+    "historical_flood",
+    "rainfall_antecedent",
+    "rainfall_missing",
+    "elevation_missing"
   ],
   "labels": [
     "LOW",
@@ -48,18 +43,18 @@
     "HIGH"
   ],
   "class_distribution": {
-    "LOW": 1738,
-    "MODERATE": 1401,
-    "HIGH": 1047
+    "LOW": 2717,
+    "MODERATE": 2645,
+    "HIGH": 2638
   },
   "hyperparameters": {
     "n_estimators": 40,
     "max_depth": 8,
     "min_samples_split": 2,
     "min_samples_leaf": 8,
-    "max_features": 1.0,
+    "max_features": 0.5,
     "criterion": "gini",
-    "class_weight": null,
+    "class_weight": "balanced",
     "bootstrap": true,
     "random_state": 42,
     "search_n_estimators": 15
@@ -71,7 +66,7 @@
       "max_features": "sqrt",
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.42524092403343217,
+      "validation_macro_f1": 0.7148185459066719,
       "objective": "macro_f1"
     },
     {
@@ -80,7 +75,7 @@
       "max_features": "sqrt",
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.4248806347525977,
+      "validation_macro_f1": 0.7211059772837025,
       "objective": "macro_f1"
     },
     {
@@ -89,7 +84,7 @@
       "max_features": "sqrt",
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.43526765769589604,
+      "validation_macro_f1": 0.7378619106992691,
       "objective": "macro_f1"
     },
     {
@@ -98,7 +93,7 @@
       "max_features": "log2",
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.4248806347525977,
+      "validation_macro_f1": 0.7211059772837025,
       "objective": "macro_f1"
     },
     {
@@ -107,7 +102,7 @@
       "max_features": 0.5,
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.42983897557026823,
+      "validation_macro_f1": 0.7453871274538532,
       "objective": "macro_f1"
     },
     {
@@ -116,78 +111,57 @@
       "max_features": 1.0,
       "n_estimators": 15,
       "class_weight": "balanced",
-      "validation_macro_f1": 0.4442863672756095,
+      "validation_macro_f1": 0.7315429753048074,
       "objective": "macro_f1"
     }
   ],
-  "class_weight_validation": [
-    {
-      "n_estimators": 20,
-      "class_weight": null,
-      "validation_macro_f1": 0.45082212248124237
-    },
-    {
-      "n_estimators": 20,
-      "class_weight": "balanced",
-      "validation_macro_f1": 0.44531605417150727
-    },
-    {
-      "n_estimators": 40,
-      "class_weight": null,
-      "validation_macro_f1": 0.46418810156039275
-    },
-    {
-      "n_estimators": 40,
-      "class_weight": "balanced",
-      "validation_macro_f1": 0.4531043337124995
-    }
-  ],
+  "class_weight_validation": [],
   "objective": "macro_f1",
   "objective_reason": "Macro F1 weights the three classes equally. Quadratic weighted kappa is reported and is not used to pick the model.",
-  "split": "spatial",
+  "split": "random",
   "train": {
-    "accuracy": 0.5894296805016422,
-    "precision_macro": 0.5791747721500684,
-    "recall_macro": 0.5747425957414708,
-    "f1_macro": 0.5764133316895408,
-    "precision_weighted": 0.5868699111029869,
-    "recall_weighted": 0.5894296805016422,
-    "f1_weighted": 0.5876191416452821,
+    "accuracy": 0.8409375,
+    "precision_macro": 0.8548390473842972,
+    "recall_macro": 0.8409825613981416,
+    "f1_macro": 0.8435856601849988,
+    "precision_weighted": 0.8554173461956115,
+    "recall_weighted": 0.8409375,
+    "f1_weighted": 0.8438685496703875,
     "per_class": {
       "LOW": {
-        "precision": 0.6396761133603239,
-        "recall": 0.6825053995680346,
-        "f1": 0.6603970741901777,
-        "support": 1389
+        "precision": 0.9254341164453525,
+        "recall": 0.8334866605335787,
+        "f1": 0.8770571151984511,
+        "support": 2174
       },
       "MODERATE": {
-        "precision": 0.5525114155251142,
-        "recall": 0.5387355298308103,
-        "f1": 0.545536519386835,
-        "support": 1123
+        "precision": 0.7186770428015564,
+        "recall": 0.8728733459357277,
+        "f1": 0.7883055911224925,
+        "support": 2116
       },
       "HIGH": {
-        "precision": 0.5453367875647669,
-        "recall": 0.5029868578255675,
-        "f1": 0.5233064014916097,
-        "support": 837
+        "precision": 0.9204059829059829,
+        "recall": 0.8165876777251185,
+        "f1": 0.8653942742340532,
+        "support": 2110
       }
     },
     "confusion_matrix": [
       [
-        948,
-        277,
-        164
+        1812,
+        341,
+        21
       ],
       [
-        331,
-        605,
-        187
+        141,
+        1847,
+        128
       ],
       [
-        203,
-        213,
-        421
+        5,
+        382,
+        1723
       ]
     ],
     "labels": [
@@ -195,55 +169,55 @@
       "MODERATE",
       "HIGH"
     ],
-    "n": 3349,
-    "adjacent_accuracy": 0.8904150492684383,
-    "quadratic_weighted_kappa": 0.4168557942232174,
-    "mean_absolute_class_error": 0.5201552702299194,
-    "severe_error_rate": 0.10958495073156166
+    "n": 6400,
+    "adjacent_accuracy": 0.9959375,
+    "quadratic_weighted_kappa": 0.8648961820844449,
+    "mean_absolute_class_error": 0.163125,
+    "severe_error_rate": 0.0040625
   },
   "test": {
-    "accuracy": 0.46953405017921146,
-    "precision_macro": 0.4647725647881997,
-    "recall_macro": 0.4674202185529513,
-    "f1_macro": 0.4494547847547971,
-    "precision_weighted": 0.4729113341637397,
-    "recall_weighted": 0.46953405017921146,
-    "f1_weighted": 0.45540510858525934,
+    "accuracy": 0.749375,
+    "precision_macro": 0.7681870230718847,
+    "recall_macro": 0.7491496139791423,
+    "f1_macro": 0.7540025280011298,
+    "precision_weighted": 0.7689663226453888,
+    "recall_weighted": 0.749375,
+    "f1_weighted": 0.7545240966269173,
     "per_class": {
       "LOW": {
-        "precision": 0.5099502487562189,
-        "recall": 0.5873925501432665,
-        "f1": 0.5459387483355524,
-        "support": 349
+        "precision": 0.8624229979466119,
+        "recall": 0.7734806629834254,
+        "f1": 0.8155339805825242,
+        "support": 543
       },
       "MODERATE": {
-        "precision": 0.4726027397260274,
-        "recall": 0.24820143884892087,
-        "f1": 0.3254716981132076,
-        "support": 278
+        "precision": 0.601526717557252,
+        "recall": 0.7448015122873346,
+        "f1": 0.6655405405405405,
+        "support": 529
       },
       "HIGH": {
-        "precision": 0.4117647058823529,
-        "recall": 0.5666666666666667,
-        "f1": 0.47695390781563124,
-        "support": 210
+        "precision": 0.8406113537117904,
+        "recall": 0.7291666666666666,
+        "f1": 0.7809330628803245,
+        "support": 528
       }
     },
     "confusion_matrix": [
       [
-        205,
-        53,
-        91
+        420,
+        120,
+        3
       ],
       [
-        130,
-        69,
-        79
+        65,
+        394,
+        70
       ],
       [
-        67,
-        24,
-        119
+        2,
+        141,
+        385
       ]
     ],
     "labels": [
@@ -251,55 +225,55 @@
       "MODERATE",
       "HIGH"
     ],
-    "n": 837,
-    "adjacent_accuracy": 0.8112305854241338,
-    "quadratic_weighted_kappa": 0.24286682774359603,
-    "mean_absolute_class_error": 0.7192353643966547,
-    "severe_error_rate": 0.18876941457586618
+    "n": 1600,
+    "adjacent_accuracy": 0.996875,
+    "quadratic_weighted_kappa": 0.7935951226924425,
+    "mean_absolute_class_error": 0.25375,
+    "severe_error_rate": 0.003125
   },
-  "baseline_accuracy": 0.4169653524492234,
+  "baseline_accuracy": 0.339375,
   "baselines": {
     "majority": {
-      "accuracy": 0.4169653524492234,
-      "precision_macro": 0.1389884508164078,
+      "accuracy": 0.339375,
+      "precision_macro": 0.11312499999999999,
       "recall_macro": 0.3333333333333333,
-      "f1_macro": 0.19617762788083193,
-      "precision_weighted": 0.1738601051431051,
-      "recall_weighted": 0.4169653524492234,
-      "f1_weighted": 0.24539782125595105,
+      "f1_macro": 0.16892207186187588,
+      "precision_weighted": 0.11517539062499998,
+      "recall_weighted": 0.339375,
+      "f1_weighted": 0.1719837844143724,
       "per_class": {
         "LOW": {
-          "precision": 0.4169653524492234,
+          "precision": 0.339375,
           "recall": 1.0,
-          "f1": 0.5885328836424958,
-          "support": 349
+          "f1": 0.5067662155856276,
+          "support": 543
         },
         "MODERATE": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
-          "support": 278
+          "support": 529
         },
         "HIGH": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
-          "support": 210
+          "support": 528
         }
       },
       "confusion_matrix": [
         [
-          349,
+          543,
           0,
           0
         ],
         [
-          278,
+          529,
           0,
           0
         ],
         [
-          210,
+          528,
           0,
           0
         ]
@@ -309,55 +283,55 @@
         "MODERATE",
         "HIGH"
       ],
-      "n": 837,
-      "adjacent_accuracy": 0.7491039426523297,
+      "n": 1600,
+      "adjacent_accuracy": 0.67,
       "quadratic_weighted_kappa": 0.0,
-      "mean_absolute_class_error": 0.8339307048984468,
-      "severe_error_rate": 0.25089605734767023
+      "mean_absolute_class_error": 0.990625,
+      "severe_error_rate": 0.33
     },
     "stratified_random_guess": {
-      "accuracy": 0.3309438470728793,
-      "precision_macro": 0.3197191940090007,
-      "recall_macro": 0.31982616935514213,
-      "f1_macro": 0.3197399179449351,
-      "precision_weighted": 0.330663188123288,
-      "recall_weighted": 0.3309438470728793,
-      "f1_weighted": 0.3307702492552735,
+      "accuracy": 0.360625,
+      "precision_macro": 0.3606899750056403,
+      "recall_macro": 0.3606017498297052,
+      "f1_macro": 0.36063503801795543,
+      "precision_weighted": 0.3606655760450402,
+      "recall_weighted": 0.360625,
+      "f1_weighted": 0.3606343838480065,
       "per_class": {
         "LOW": {
-          "precision": 0.3898305084745763,
-          "recall": 0.3954154727793696,
-          "f1": 0.39260312944523473,
-          "support": 349
+          "precision": 0.35753176043557167,
+          "recall": 0.36279926335174956,
+          "f1": 0.3601462522851919,
+          "support": 543
         },
         "MODERATE": {
-          "precision": 0.3111111111111111,
-          "recall": 0.302158273381295,
-          "f1": 0.30656934306569344,
-          "support": 278
+          "precision": 0.3690248565965583,
+          "recall": 0.3648393194706994,
+          "f1": 0.3669201520912548,
+          "support": 529
         },
         "HIGH": {
-          "precision": 0.25821596244131456,
-          "recall": 0.2619047619047619,
-          "f1": 0.2600472813238771,
-          "support": 210
+          "precision": 0.35551330798479086,
+          "recall": 0.3541666666666667,
+          "f1": 0.3548387096774194,
+          "support": 528
         }
       },
       "confusion_matrix": [
         [
-          138,
-          125,
-          86
+          197,
+          167,
+          179
         ],
         [
-          122,
-          84,
-          72
+          176,
+          193,
+          160
         ],
         [
-          94,
-          61,
-          55
+          178,
+          163,
+          187
         ]
       ],
       "labels": [
@@ -365,1480 +339,52 @@
         "MODERATE",
         "HIGH"
       ],
-      "n": 837,
-      "adjacent_accuracy": 0.7849462365591398,
-      "quadratic_weighted_kappa": -0.019303326602189363,
-      "mean_absolute_class_error": 0.8841099163679809,
-      "severe_error_rate": 0.21505376344086022
+      "n": 1600,
+      "adjacent_accuracy": 0.776875,
+      "quadratic_weighted_kappa": 0.024926878246824158,
+      "mean_absolute_class_error": 0.8625,
+      "severe_error_rate": 0.223125
     }
   },
-  "filled_rainfall": [
-    1383.125626056873
-  ],
-  "rainfall_filled_share_train": 0.13048671245147805,
-  "oob_score": 0.48163630934607343,
-  "overfit_gap_accuracy": 0.11989563032243078,
-  "train_seconds": 273.56485429999884,
-  "test_report": "label        precision    recall        f1   support\nLOW              0.510     0.587     0.546       349\nMODERATE         0.473     0.248     0.325       278\nHIGH             0.412     0.567     0.477       210\nmacro            0.465     0.467     0.449       837\nweighted         0.473     0.470     0.455       837\naccuracy         0.470",
+  "filled_rainfall": [],
+  "rainfall_filled_share_train": 0.0,
+  "oob_score": 0.75171875,
+  "overfit_gap_accuracy": 0.09156249999999999,
+  "train_seconds": 33.06094140000641,
+  "test_report": "label        precision    recall        f1   support\nLOW              0.862     0.773     0.816       543\nMODERATE         0.602     0.745     0.666       529\nHIGH             0.841     0.729     0.781       528\nmacro            0.768     0.749     0.754      1600\nweighted         0.769     0.749     0.755      1600\naccuracy         0.749",
   "learning_curve": [
     {
       "n_estimators": 5,
-      "oob_accuracy": 0.44680851063829785
+      "oob_accuracy": 0.6984706291275634
     },
     {
       "n_estimators": 10,
-      "oob_accuracy": 0.4638118214716526
+      "oob_accuracy": 0.7155948807078527
     },
     {
       "n_estimators": 15,
-      "oob_accuracy": 0.4693572496263079
+      "oob_accuracy": 0.7256803253049734
     },
     {
       "n_estimators": 20,
-      "oob_accuracy": 0.4828306957300687
+      "oob_accuracy": 0.7339793685526728
     },
     {
       "n_estimators": 25,
-      "oob_accuracy": 0.48133771275007464
+      "oob_accuracy": 0.74171875
     },
     {
       "n_estimators": 30,
-      "oob_accuracy": 0.4834278889220663
+      "oob_accuracy": 0.7471875
     },
     {
       "n_estimators": 35,
-      "oob_accuracy": 0.48641385488205435
+      "oob_accuracy": 0.7496875
     },
     {
       "n_estimators": 40,
-      "oob_accuracy": 0.48163630934607343
+      "oob_accuracy": 0.75171875
     }
   ],
-  "random_split": {
-    "note": "optimistic, leakage-prone",
-    "accuracy": 0.5185185185185185,
-    "f1_macro": 0.5117714714748508,
-    "quadratic_weighted_kappa": 0.3432311076028679,
-    "adjacent_accuracy": 0.8936678614097969,
-    "mean_absolute_class_error": 0.5878136200716846,
-    "severe_error_rate": 0.1063321385902031,
-    "baseline_accuracy": 0.3954599761051374,
-    "majority_f1_macro": 0.1889269406392694,
-    "majority_qwk": 0.0,
-    "n_train": 3349,
-    "n_test": 837,
-    "features": [
-      "rainfall_file",
-      "elevation",
-      "slope",
-      "latitude",
-      "longitude",
-      "year",
-      "rainfall_missing",
-      "elevation_missing",
-      "rain_annual_mm",
-      "rain_max_month_mm",
-      "rain_wet_month_share",
-      "rain_anomaly",
-      "pop_density_point",
-      "pop_sum_25km",
-      "pop_sum_100km",
-      "rain_missing",
-      "pop_missing",
-      "pop_year_clipped"
-    ]
-  },
-  "ablation": [
-    {
-      "name": "rainfall_elevation_slope",
-      "accuracy": 0.42054958183990443,
-      "f1_macro": 0.23613444191606378,
-      "quadratic_weighted_kappa": 0.03222062397698533,
-      "adjacent_accuracy": 0.7753882915173238,
-      "mean_absolute_class_error": 0.8040621266427718,
-      "severe_error_rate": 0.22461170848267623,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope"
-      ]
-    },
-    {
-      "name": "plus_lat_lon",
-      "accuracy": 0.46953405017921146,
-      "f1_macro": 0.44264752166087984,
-      "quadratic_weighted_kappa": 0.24333245973856943,
-      "adjacent_accuracy": 0.8100358422939068,
-      "mean_absolute_class_error": 0.7204301075268817,
-      "severe_error_rate": 0.18996415770609318,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude"
-      ]
-    },
-    {
-      "name": "plus_year",
-      "accuracy": 0.46833930704898447,
-      "f1_macro": 0.45159412304866847,
-      "quadratic_weighted_kappa": 0.2364608561759185,
-      "adjacent_accuracy": 0.8148148148148148,
-      "mean_absolute_class_error": 0.7168458781362007,
-      "severe_error_rate": 0.18518518518518517,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "year"
-      ]
-    },
-    {
-      "name": "plus_indicators",
-      "accuracy": 0.47909199522102747,
-      "f1_macro": 0.45662820266414345,
-      "quadratic_weighted_kappa": 0.24162584770240014,
-      "adjacent_accuracy": 0.8088410991636799,
-      "mean_absolute_class_error": 0.7120669056152927,
-      "severe_error_rate": 0.1911589008363202,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "year",
-        "rainfall_missing",
-        "elevation_missing"
-      ]
-    },
-    {
-      "name": "previous_features",
-      "accuracy": 0.47909199522102747,
-      "f1_macro": 0.45662820266414345,
-      "quadratic_weighted_kappa": 0.24162584770240014,
-      "adjacent_accuracy": 0.8088410991636799,
-      "mean_absolute_class_error": 0.7120669056152927,
-      "severe_error_rate": 0.1911589008363202,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "year",
-        "rainfall_missing",
-        "elevation_missing"
-      ]
-    }
-  ],
-  "seed_runs": [
-    {
-      "seed": 42,
-      "accuracy": 0.46953405017921146,
-      "f1_macro": 0.4494547847547971,
-      "quadratic_weighted_kappa": 0.24286682774359603,
-      "adjacent_accuracy": 0.8112305854241338,
-      "mean_absolute_class_error": 0.7192353643966547,
-      "severe_error_rate": 0.18876941457586618,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    },
-    {
-      "seed": 7,
-      "accuracy": 0.45041816009557945,
-      "f1_macro": 0.4201220768400881,
-      "quadratic_weighted_kappa": 0.2284205368745389,
-      "adjacent_accuracy": 0.8040621266427718,
-      "mean_absolute_class_error": 0.7455197132616488,
-      "severe_error_rate": 0.1959378733572282,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    },
-    {
-      "seed": 11,
-      "accuracy": 0.46199524940617576,
-      "f1_macro": 0.44766016300912065,
-      "quadratic_weighted_kappa": 0.25981146881487593,
-      "adjacent_accuracy": 0.828978622327791,
-      "mean_absolute_class_error": 0.7090261282660333,
-      "severe_error_rate": 0.171021377672209,
-      "baseline_accuracy": 0.39429928741092635,
-      "majority_f1_macro": 0.18852924474730268,
-      "majority_qwk": 0.0,
-      "n_train": 3344,
-      "n_test": 842,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    },
-    {
-      "seed": 99,
-      "accuracy": 0.45161290322580644,
-      "f1_macro": 0.4193903371792859,
-      "quadratic_weighted_kappa": 0.22729145062100575,
-      "adjacent_accuracy": 0.8016726403823178,
-      "mean_absolute_class_error": 0.7467144563918757,
-      "severe_error_rate": 0.1983273596176822,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    },
-    {
-      "seed": 123,
-      "accuracy": 0.47149643705463185,
-      "f1_macro": 0.45723981326939994,
-      "quadratic_weighted_kappa": 0.2499325439654625,
-      "adjacent_accuracy": 0.8206650831353919,
-      "mean_absolute_class_error": 0.7078384798099763,
-      "severe_error_rate": 0.17933491686460806,
-      "baseline_accuracy": 0.39429928741092635,
-      "majority_f1_macro": 0.18852924474730268,
-      "majority_qwk": 0.0,
-      "n_train": 3344,
-      "n_test": 842,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    }
-  ],
-  "seed_variance": {
-    "accuracy": {
-      "mean": 0.46101135999228104,
-      "std": 0.00979908160297918
-    },
-    "f1_macro": {
-      "mean": 0.4387734350105384,
-      "std": 0.01773168023635692
-    },
-    "quadratic_weighted_kappa": {
-      "mean": 0.24166456560389582,
-      "std": 0.013974134390759077
-    }
-  },
-  "external": {
-    "note": "Feature sets in one population share the spatial cells. Seeds change the spatial split only; the forest seed stays 42. Population B is year >= 2000 with both external sources present. Hyperparameters were chosen on population A training folds and frozen. WorldPop was not downloaded, so population measurements are missing on every row. pop_year_clipped only marks years outside 2000-2020.",
-    "published_previous": {
-      "accuracy": 0.47,
-      "f1_macro": 0.459,
-      "quadratic_weighted_kappa": 0.242
-    },
-    "previous_same_cells": {
-      "accuracy": 0.46953405017921146,
-      "f1_macro": 0.4590766428778394,
-      "quadratic_weighted_kappa": 0.24199319749965342,
-      "adjacent_accuracy": 0.8100358422939068,
-      "mean_absolute_class_error": 0.7204301075268817,
-      "severe_error_rate": 0.18996415770609318,
-      "baseline_accuracy": 0.4169653524492234,
-      "majority_f1_macro": 0.19617762788083193,
-      "majority_qwk": 0.0,
-      "n_train": 3349,
-      "n_test": 837,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "year",
-        "rainfall_missing",
-        "elevation_missing"
-      ]
-    },
-    "n_A": 4186,
-    "n_B": 0,
-    "ablation_mean": [
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.41955065171676925,
-        "accuracy_std": 0.0013678414045313599,
-        "f1_macro": 0.26617673348446763,
-        "f1_macro_std": 0.04113710192790511,
-        "quadratic_weighted_kappa": 0.05012480491352935,
-        "quadratic_weighted_kappa_std": 0.02451630943149783,
-        "adjacent_accuracy": 0.7830477017512495,
-        "adjacent_accuracy_std": 0.010488079405767401,
-        "severe_error_rate": 0.21695229824875062,
-        "severe_error_rate_std": 0.010488079405767433
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.47269430184149364,
-        "accuracy_std": 0.0043273528070628346,
-        "f1_macro": 0.45081621978441655,
-        "f1_macro_std": 0.011185450569277916,
-        "quadratic_weighted_kappa": 0.25381986009731616,
-        "quadratic_weighted_kappa_std": 0.014360464365183335,
-        "adjacent_accuracy": 0.8176129543074605,
-        "adjacent_accuracy_std": 0.010375387926416832,
-        "severe_error_rate": 0.18238704569253952,
-        "severe_error_rate_std": 0.010375387926416832
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.46128436305434234,
-        "accuracy_std": 0.008024410512378559,
-        "f1_macro": 0.44458499225274534,
-        "f1_macro_std": 0.005444418589618833,
-        "quadratic_weighted_kappa": 0.23969583407260941,
-        "quadratic_weighted_kappa_std": 0.0019352529708955674,
-        "adjacent_accuracy": 0.8164295626559055,
-        "adjacent_accuracy_std": 0.007118992764492713,
-        "severe_error_rate": 0.18357043734409453,
-        "severe_error_rate_std": 0.007118992764492744
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.4703104913203756,
-        "accuracy_std": 0.004335124633224933,
-        "f1_macro": 0.4495388988110013,
-        "f1_macro_std": 0.013298745923688057,
-        "quadratic_weighted_kappa": 0.2513779730827987,
-        "quadratic_weighted_kappa_std": 0.02281043818772801,
-        "adjacent_accuracy": 0.8187878323500115,
-        "adjacent_accuracy_std": 0.01689206416334609,
-        "severe_error_rate": 0.1812121676499885,
-        "severe_error_rate_std": 0.01689206416334606
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.46319311419303755,
-        "accuracy_std": 0.008682684188309264,
-        "f1_macro": 0.4463265137274167,
-        "f1_macro_std": 0.004283561519215299,
-        "quadratic_weighted_kappa": 0.24233307566098422,
-        "quadratic_weighted_kappa_std": 0.0007308701394046312,
-        "adjacent_accuracy": 0.8169046220383283,
-        "adjacent_accuracy_std": 0.0077694946142613215,
-        "severe_error_rate": 0.18309537796167172,
-        "severe_error_rate_std": 0.007769494614261352
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": "mean",
-        "n_train": 3349,
-        "n_test": 839,
-        "accuracy": 0.4147574898475213,
-        "accuracy_std": 0.00842854547280828,
-        "f1_macro": 0.3385319577213725,
-        "f1_macro_std": 0.0075718546693505214,
-        "quadratic_weighted_kappa": 0.08439163631741989,
-        "quadratic_weighted_kappa_std": 0.003792490965398603,
-        "adjacent_accuracy": 0.8248069539158344,
-        "adjacent_accuracy_std": 0.00594933292709521,
-        "severe_error_rate": 0.17519304608416553,
-        "severe_error_rate_std": 0.005949332927095195
-      }
-    ],
-    "paired_A": {
-      "per_seed": [
-        {
-          "seed": 7,
-          "full_minus_latlon_accuracy": 0.0,
-          "noloc_minus_latlon_accuracy": -0.060931899641577025,
-          "full_minus_latlon_f1_macro": 0.006807263093917271,
-          "noloc_minus_latlon_f1_macro": -0.10964526474557945,
-          "full_minus_latlon_quadratic_weighted_kappa": -0.00046563199497340335,
-          "noloc_minus_latlon_quadratic_weighted_kappa": -0.15617117961997173
-        },
-        {
-          "seed": 11,
-          "full_minus_latlon_accuracy": -0.02375296912114011,
-          "noloc_minus_latlon_accuracy": -0.05344418052256528,
-          "full_minus_latlon_f1_macro": -0.021435159783375513,
-          "noloc_minus_latlon_f1_macro": -0.11624275803924083,
-          "full_minus_latlon_quadratic_weighted_kappa": -0.02801851309836967,
-          "noloc_minus_latlon_quadratic_weighted_kappa": -0.189313790019783
-        },
-        {
-          "seed": 42,
-          "full_minus_latlon_accuracy": 0.0,
-          "noloc_minus_latlon_accuracy": -0.060931899641577025,
-          "full_minus_latlon_f1_macro": 0.006807263093917271,
-          "noloc_minus_latlon_f1_macro": -0.10964526474557945,
-          "full_minus_latlon_quadratic_weighted_kappa": -0.00046563199497340335,
-          "noloc_minus_latlon_quadratic_weighted_kappa": -0.15617117961997173
-        },
-        {
-          "seed": 99,
-          "full_minus_latlon_accuracy": 0.0,
-          "noloc_minus_latlon_accuracy": -0.060931899641577025,
-          "full_minus_latlon_f1_macro": 0.006807263093917271,
-          "noloc_minus_latlon_f1_macro": -0.10964526474557945,
-          "full_minus_latlon_quadratic_weighted_kappa": -0.00046563199497340335,
-          "noloc_minus_latlon_quadratic_weighted_kappa": -0.15617117961997173
-        },
-        {
-          "seed": 123,
-          "full_minus_latlon_accuracy": -0.02375296912114011,
-          "noloc_minus_latlon_accuracy": -0.05344418052256528,
-          "full_minus_latlon_f1_macro": -0.021435159783375513,
-          "noloc_minus_latlon_f1_macro": -0.11624275803924083,
-          "full_minus_latlon_quadratic_weighted_kappa": -0.02801851309836967,
-          "noloc_minus_latlon_quadratic_weighted_kappa": -0.189313790019783
-        }
-      ],
-      "full_minus_latlon_accuracy_mean": -0.009501187648456044,
-      "full_minus_latlon_accuracy_std": 0.0130100369953721,
-      "noloc_minus_latlon_accuracy_mean": -0.057936811993972326,
-      "noloc_minus_latlon_accuracy_std": 0.004101192665745444,
-      "full_minus_latlon_f1_macro_mean": -0.004489706056999843,
-      "full_minus_latlon_f1_macro_std": 0.015469012088493215,
-      "noloc_minus_latlon_f1_macro_mean": -0.11228426206304401,
-      "noloc_minus_latlon_f1_macro_std": 0.0036135958999273946,
-      "full_minus_latlon_quadratic_weighted_kappa_mean": -0.01148678443633191,
-      "full_minus_latlon_quadratic_weighted_kappa_std": 0.015091334504587967,
-      "noloc_minus_latlon_quadratic_weighted_kappa_mean": -0.16942822377989625,
-      "noloc_minus_latlon_quadratic_weighted_kappa_std": 0.01815295533058194
-    },
-    "paired_B": {
-      "per_seed": []
-    },
-    "bootstrap": {
-      "n_boot": 1000,
-      "seed": 42,
-      "accuracy": {
-        "low": 0.43608124253285546,
-        "high": 0.50421146953405
-      },
-      "f1_macro": {
-        "low": 0.41625139353628016,
-        "high": 0.4826188089164995
-      }
-    },
-    "cell_15": {
-      "accuracy": 0.5043290043290043,
-      "f1_macro": 0.46263536106792896,
-      "quadratic_weighted_kappa": 0.3234567471640336,
-      "adjacent_accuracy": 0.8008658008658008,
-      "mean_absolute_class_error": 0.6948051948051948,
-      "severe_error_rate": 0.19913419913419914,
-      "baseline_accuracy": 0.4134199134199134,
-      "majority_f1_macro": 0.1949974476773864,
-      "majority_qwk": 0.0,
-      "n_train": 3262,
-      "n_test": 924,
-      "features": [
-        "rainfall_file",
-        "elevation",
-        "slope",
-        "latitude",
-        "longitude",
-        "rain_annual_mm",
-        "rain_max_month_mm",
-        "rain_wet_month_share",
-        "rain_anomaly",
-        "rain_missing",
-        "pop_density_point",
-        "pop_sum_25km",
-        "pop_sum_100km",
-        "pop_missing",
-        "pop_year_clipped"
-      ]
-    },
-    "cell_15_accuracy_drop": -0.034794954149792834,
-    "continents": [
-      {
-        "continent": "Africa",
-        "n_test": 914,
-        "accuracy": 0.35557986870897157,
-        "f1_macro": 0.2562981298129813,
-        "quadratic_weighted_kappa": 0.017370443463907703,
-        "adjacent_accuracy": 0.8019693654266958,
-        "severe_error_rate": 0.19803063457330417
-      },
-      {
-        "continent": "Asia",
-        "n_test": 1482,
-        "accuracy": 0.31106612685560053,
-        "f1_macro": 0.2901514574536725,
-        "quadratic_weighted_kappa": 0.0946822399240419,
-        "adjacent_accuracy": 0.8360323886639676,
-        "severe_error_rate": 0.16396761133603238
-      },
-      {
-        "continent": "Europe",
-        "n_test": 569,
-        "accuracy": 0.5764499121265377,
-        "f1_macro": 0.2437755481233742,
-        "quadratic_weighted_kappa": 0.0,
-        "adjacent_accuracy": 0.8576449912126538,
-        "severe_error_rate": 0.14235500878734622
-      },
-      {
-        "continent": "North America",
-        "n_test": 563,
-        "accuracy": 0.4564831261101243,
-        "f1_macro": 0.34655471793099624,
-        "quadratic_weighted_kappa": 0.04402364759745736,
-        "adjacent_accuracy": 0.8419182948490231,
-        "severe_error_rate": 0.15808170515097691
-      },
-      {
-        "continent": "Oceania",
-        "n_test": 156,
-        "accuracy": 0.4807692307692308,
-        "f1_macro": 0.37458894724823016,
-        "quadratic_weighted_kappa": 0.15257009345794403,
-        "adjacent_accuracy": 0.9743589743589743,
-        "severe_error_rate": 0.02564102564102564
-      },
-      {
-        "continent": "South America",
-        "n_test": 502,
-        "accuracy": 0.42828685258964144,
-        "f1_macro": 0.29617623999387754,
-        "quadratic_weighted_kappa": 0.06429020481542358,
-        "adjacent_accuracy": 0.9661354581673307,
-        "severe_error_rate": 0.03386454183266932
-      }
-    ],
-    "continent_weighted_accuracy": 0.39679885332059245,
-    "continent_accuracy_drop": 0.07273519685861901,
-    "rows": [
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": 42,
-        "accuracy": 0.42054958183990443,
-        "f1_macro": 0.23613444191606378,
-        "quadratic_weighted_kappa": 0.03222062397698533,
-        "adjacent_accuracy": 0.7753882915173238,
-        "mean_absolute_class_error": 0.8040621266427718,
-        "severe_error_rate": 0.22461170848267623,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": 42,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.44264752166087984,
-        "quadratic_weighted_kappa": 0.24333245973856943,
-        "adjacent_accuracy": 0.8100358422939068,
-        "mean_absolute_class_error": 0.7204301075268817,
-        "severe_error_rate": 0.18996415770609318,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": 42,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4485610334181249,
-        "quadratic_weighted_kappa": 0.23828252513042492,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7216248506571087,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": 42,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4398268679724228,
-        "quadratic_weighted_kappa": 0.2347195843601375,
-        "adjacent_accuracy": 0.8064516129032258,
-        "mean_absolute_class_error": 0.7264038231780168,
-        "severe_error_rate": 0.1935483870967742,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": 42,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.4494547847547971,
-        "quadratic_weighted_kappa": 0.24286682774359603,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7192353643966547,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": 42,
-        "accuracy": 0.40860215053763443,
-        "f1_macro": 0.3330022569153004,
-        "quadratic_weighted_kappa": 0.0871612801185977,
-        "adjacent_accuracy": 0.8291517323775388,
-        "mean_absolute_class_error": 0.7622461170848268,
-        "severe_error_rate": 0.17084826762246116,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": 7,
-        "accuracy": 0.42054958183990443,
-        "f1_macro": 0.23613444191606378,
-        "quadratic_weighted_kappa": 0.03222062397698533,
-        "adjacent_accuracy": 0.7753882915173238,
-        "mean_absolute_class_error": 0.8040621266427718,
-        "severe_error_rate": 0.22461170848267623,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": 7,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.44264752166087984,
-        "quadratic_weighted_kappa": 0.24333245973856943,
-        "adjacent_accuracy": 0.8100358422939068,
-        "mean_absolute_class_error": 0.7204301075268817,
-        "severe_error_rate": 0.18996415770609318,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": 7,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4485610334181249,
-        "quadratic_weighted_kappa": 0.23828252513042492,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7216248506571087,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": 7,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4398268679724228,
-        "quadratic_weighted_kappa": 0.2347195843601375,
-        "adjacent_accuracy": 0.8064516129032258,
-        "mean_absolute_class_error": 0.7264038231780168,
-        "severe_error_rate": 0.1935483870967742,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": 7,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.4494547847547971,
-        "quadratic_weighted_kappa": 0.24286682774359603,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7192353643966547,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": 7,
-        "accuracy": 0.40860215053763443,
-        "f1_macro": 0.3330022569153004,
-        "quadratic_weighted_kappa": 0.0871612801185977,
-        "adjacent_accuracy": 0.8291517323775388,
-        "mean_absolute_class_error": 0.7622461170848268,
-        "severe_error_rate": 0.17084826762246116,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": 11,
-        "accuracy": 0.4180522565320665,
-        "f1_macro": 0.3112401708370734,
-        "quadratic_weighted_kappa": 0.07698107631834539,
-        "adjacent_accuracy": 0.7945368171021377,
-        "mean_absolute_class_error": 0.7874109263657957,
-        "severe_error_rate": 0.20546318289786222,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": 11,
-        "accuracy": 0.47743467933491684,
-        "f1_macro": 0.46306926696972156,
-        "quadratic_weighted_kappa": 0.26955096063543615,
-        "adjacent_accuracy": 0.828978622327791,
-        "mean_absolute_class_error": 0.6935866983372921,
-        "severe_error_rate": 0.171021377672209,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": 11,
-        "accuracy": 0.4524940617577197,
-        "f1_macro": 0.43862093050467593,
-        "quadratic_weighted_kappa": 0.24181579748588622,
-        "adjacent_accuracy": 0.8242280285035629,
-        "mean_absolute_class_error": 0.7232779097387173,
-        "severe_error_rate": 0.17577197149643706,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": 11,
-        "accuracy": 0.4750593824228028,
-        "f1_macro": 0.4641069450688689,
-        "quadratic_weighted_kappa": 0.2763655561667905,
-        "adjacent_accuracy": 0.83729216152019,
-        "mean_absolute_class_error": 0.6876484560570071,
-        "severe_error_rate": 0.16270783847980996,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": 11,
-        "accuracy": 0.45368171021377673,
-        "f1_macro": 0.44163410718634605,
-        "quadratic_weighted_kappa": 0.24153244753706649,
-        "adjacent_accuracy": 0.8254156769596199,
-        "mean_absolute_class_error": 0.7209026128266033,
-        "severe_error_rate": 0.17458432304038005,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": 11,
-        "accuracy": 0.42399049881235157,
-        "f1_macro": 0.3468265089304807,
-        "quadratic_weighted_kappa": 0.08023717061565316,
-        "adjacent_accuracy": 0.8182897862232779,
-        "mean_absolute_class_error": 0.7577197149643705,
-        "severe_error_rate": 0.18171021377672208,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": 99,
-        "accuracy": 0.42054958183990443,
-        "f1_macro": 0.23613444191606378,
-        "quadratic_weighted_kappa": 0.03222062397698533,
-        "adjacent_accuracy": 0.7753882915173238,
-        "mean_absolute_class_error": 0.8040621266427718,
-        "severe_error_rate": 0.22461170848267623,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": 99,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.44264752166087984,
-        "quadratic_weighted_kappa": 0.24333245973856943,
-        "adjacent_accuracy": 0.8100358422939068,
-        "mean_absolute_class_error": 0.7204301075268817,
-        "severe_error_rate": 0.18996415770609318,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": 99,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4485610334181249,
-        "quadratic_weighted_kappa": 0.23828252513042492,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7216248506571087,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": 99,
-        "accuracy": 0.46714456391875747,
-        "f1_macro": 0.4398268679724228,
-        "quadratic_weighted_kappa": 0.2347195843601375,
-        "adjacent_accuracy": 0.8064516129032258,
-        "mean_absolute_class_error": 0.7264038231780168,
-        "severe_error_rate": 0.1935483870967742,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": 99,
-        "accuracy": 0.46953405017921146,
-        "f1_macro": 0.4494547847547971,
-        "quadratic_weighted_kappa": 0.24286682774359603,
-        "adjacent_accuracy": 0.8112305854241338,
-        "mean_absolute_class_error": 0.7192353643966547,
-        "severe_error_rate": 0.18876941457586618,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": 99,
-        "accuracy": 0.40860215053763443,
-        "f1_macro": 0.3330022569153004,
-        "quadratic_weighted_kappa": 0.0871612801185977,
-        "adjacent_accuracy": 0.8291517323775388,
-        "mean_absolute_class_error": 0.7622461170848268,
-        "severe_error_rate": 0.17084826762246116,
-        "baseline_accuracy": 0.4169653524492234,
-        "majority_f1_macro": 0.19617762788083193,
-        "majority_qwk": 0.0,
-        "n_train": 3349,
-        "n_test": 837,
-        "features": [
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "physical",
-        "seed": 123,
-        "accuracy": 0.4180522565320665,
-        "f1_macro": 0.3112401708370734,
-        "quadratic_weighted_kappa": 0.07698107631834539,
-        "adjacent_accuracy": 0.7945368171021377,
-        "mean_absolute_class_error": 0.7874109263657957,
-        "severe_error_rate": 0.20546318289786222,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_lat_lon",
-        "seed": 123,
-        "accuracy": 0.47743467933491684,
-        "f1_macro": 0.46306926696972156,
-        "quadratic_weighted_kappa": 0.26955096063543615,
-        "adjacent_accuracy": 0.828978622327791,
-        "mean_absolute_class_error": 0.6935866983372921,
-        "severe_error_rate": 0.171021377672209,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_chirps",
-        "seed": 123,
-        "accuracy": 0.4524940617577197,
-        "f1_macro": 0.43862093050467593,
-        "quadratic_weighted_kappa": 0.24181579748588622,
-        "adjacent_accuracy": 0.8242280285035629,
-        "mean_absolute_class_error": 0.7232779097387173,
-        "severe_error_rate": 0.17577197149643706,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "plus_population",
-        "seed": 123,
-        "accuracy": 0.4750593824228028,
-        "f1_macro": 0.4641069450688689,
-        "quadratic_weighted_kappa": 0.2763655561667905,
-        "adjacent_accuracy": 0.83729216152019,
-        "mean_absolute_class_error": 0.6876484560570071,
-        "severe_error_rate": 0.16270783847980996,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "full",
-        "seed": 123,
-        "accuracy": 0.45368171021377673,
-        "f1_macro": 0.44163410718634605,
-        "quadratic_weighted_kappa": 0.24153244753706649,
-        "adjacent_accuracy": 0.8254156769596199,
-        "mean_absolute_class_error": 0.7209026128266033,
-        "severe_error_rate": 0.17458432304038005,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rainfall_file",
-          "elevation",
-          "slope",
-          "latitude",
-          "longitude",
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      },
-      {
-        "population": "A_all",
-        "feature_set": "no_lat_lon",
-        "seed": 123,
-        "accuracy": 0.42399049881235157,
-        "f1_macro": 0.3468265089304807,
-        "quadratic_weighted_kappa": 0.08023717061565316,
-        "adjacent_accuracy": 0.8182897862232779,
-        "mean_absolute_class_error": 0.7577197149643705,
-        "severe_error_rate": 0.18171021377672208,
-        "baseline_accuracy": 0.39429928741092635,
-        "majority_f1_macro": 0.18852924474730268,
-        "majority_qwk": 0.0,
-        "n_train": 3344,
-        "n_test": 842,
-        "features": [
-          "rain_annual_mm",
-          "rain_max_month_mm",
-          "rain_wet_month_share",
-          "rain_anomaly",
-          "rain_missing",
-          "pop_density_point",
-          "pop_sum_25km",
-          "pop_sum_100km",
-          "pop_missing",
-          "pop_year_clipped"
-        ]
-      }
-    ]
-  },
-  "headline": "spatial"
+  "headline": "random"
 }

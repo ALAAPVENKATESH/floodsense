@@ -9,3 +9,4 @@ __pycache__/
 Thumbs.db
 data/external/**
 !data/external/MANIFEST.json
+data/classification_backup/

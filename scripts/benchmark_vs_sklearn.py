@@ -30,10 +30,24 @@ from sklearn.ensemble import RandomForestClassifier as SklearnForest
 def main() -> None:
     print("BENCHMARK ONLY. sklearn is not the project model and is not saved.")
     frame = load_processed().head(2000)
-    columns = model_feature_columns(frame)
-    X_train, X_test, y_train, y_test = stratified_train_test_split(
-        frame[columns], frame[config.TARGET], test_size=0.2, random_state=config.RANDOM_STATE
-    )
+    score_col = None
+    if config.TARGET not in frame.columns:
+        for candidate in ("flood_hazard_score", "historical_flood"):
+            if candidate in frame.columns:
+                score_col = candidate
+                break
+    columns = model_feature_columns(frame, drop=[score_col] if score_col else None)
+    if score_col:
+        from flood_rf.preprocessing import bin_score_train_quantiles, split_positions
+        train_pos, test_pos = split_positions(frame, "random", config.RANDOM_STATE)
+        train_df = frame.iloc[train_pos].reset_index(drop=True)
+        test_df = frame.iloc[test_pos].reset_index(drop=True)
+        y_train, y_test, _ = bin_score_train_quantiles(train_df[score_col], test_df[score_col])
+        X_train, X_test = train_df[columns], test_df[columns]
+    else:
+        X_train, X_test, y_train, y_test = stratified_train_test_split(
+            frame[columns], frame[config.TARGET], test_size=0.2, random_state=config.RANDOM_STATE
+        )
     labels = [label for label in config.CLASS_LABELS if label in set(y_train) | set(y_test)]
     pre = Preprocessor().fit(X_train)
     engineer = FeatureEngineer()

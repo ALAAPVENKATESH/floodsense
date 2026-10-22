@@ -2,126 +2,118 @@
   "note": "Feature importance reflects model behavior on the fitted data, not proof of causation.",
   "impurity": [
     {
-      "feature": "longitude",
-      "importance": 0.22358836802845028
+      "feature": "rainfall_x_impervious",
+      "importance": 0.23874476201604136
     },
     {
-      "feature": "latitude",
-      "importance": 0.21437047346388183
+      "feature": "drainage_density",
+      "importance": 0.15467943107813148
+    },
+    {
+      "feature": "elevation_relative_to_water",
+      "importance": 0.11366359286417949
     },
     {
       "feature": "elevation",
-      "importance": 0.09656082297079654
+      "importance": 0.10906351448455338
     },
     {
-      "feature": "rainfall_file",
-      "importance": 0.08561454284096456
+      "feature": "impervious_area",
+      "importance": 0.09214977746765271
+    },
+    {
+      "feature": "cumulative_rainfall",
+      "importance": 0.07787143106129558
+    },
+    {
+      "feature": "rainfall",
+      "importance": 0.07521992144733647
+    },
+    {
+      "feature": "historical_flood",
+      "importance": 0.05423886318859731
+    },
+    {
+      "feature": "rainfall_antecedent",
+      "importance": 0.026123000492882176
+    },
+    {
+      "feature": "distance_to_water",
+      "importance": 0.02162692065048625
     },
     {
       "feature": "slope",
-      "importance": 0.08170807091724706
+      "importance": 0.021506274411739076
     },
     {
-      "feature": "rain_wet_month_share",
-      "importance": 0.08138438316005073
+      "feature": "rainfall_intensity",
+      "importance": 0.015112510837104784
     },
     {
-      "feature": "rain_anomaly",
-      "importance": 0.07713987847966035
-    },
-    {
-      "feature": "rain_max_month_mm",
-      "importance": 0.06903852615447449
-    },
-    {
-      "feature": "rain_annual_mm",
-      "importance": 0.05850498700651049
-    },
-    {
-      "feature": "pop_year_clipped",
-      "importance": 0.009884923124658948
-    },
-    {
-      "feature": "rain_missing",
-      "importance": 0.0022050238533045533
-    },
-    {
-      "feature": "pop_density_point",
+      "feature": "rainfall_missing",
       "importance": 0.0
     },
     {
-      "feature": "pop_sum_25km",
-      "importance": 0.0
-    },
-    {
-      "feature": "pop_sum_100km",
-      "importance": 0.0
-    },
-    {
-      "feature": "pop_missing",
+      "feature": "elevation_missing",
       "importance": 0.0
     }
   ],
   "permutation": [
     {
-      "feature": "latitude",
-      "importance": 0.06333333333333334
+      "feature": "rainfall_x_impervious",
+      "importance": 0.1745833333333333
     },
     {
-      "feature": "longitude",
-      "importance": 0.05791666666666669
+      "feature": "drainage_density",
+      "importance": 0.13249999999999998
     },
     {
-      "feature": "slope",
-      "importance": 0.006250000000000015
+      "feature": "impervious_area",
+      "importance": 0.07874999999999999
+    },
+    {
+      "feature": "elevation_relative_to_water",
+      "importance": 0.06166666666666665
     },
     {
       "feature": "elevation",
-      "importance": 0.0037500000000000124
+      "importance": 0.06124999999999999
     },
     {
-      "feature": "rain_annual_mm",
-      "importance": 0.0029166666666666785
+      "feature": "cumulative_rainfall",
+      "importance": 0.03958333333333334
     },
     {
-      "feature": "pop_density_point",
+      "feature": "rainfall",
+      "importance": 0.01416666666666666
+    },
+    {
+      "feature": "historical_flood",
+      "importance": 0.012916666666666687
+    },
+    {
+      "feature": "rainfall_antecedent",
+      "importance": 0.012083333333333335
+    },
+    {
+      "feature": "slope",
+      "importance": 0.009166666666666656
+    },
+    {
+      "feature": "rainfall_intensity",
+      "importance": 0.008750000000000036
+    },
+    {
+      "feature": "distance_to_water",
+      "importance": 0.008333333333333304
+    },
+    {
+      "feature": "rainfall_missing",
       "importance": 0.0
     },
     {
-      "feature": "pop_sum_25km",
+      "feature": "elevation_missing",
       "importance": 0.0
-    },
-    {
-      "feature": "pop_sum_100km",
-      "importance": 0.0
-    },
-    {
-      "feature": "pop_missing",
-      "importance": 0.0
-    },
-    {
-      "feature": "rain_missing",
-      "importance": -0.0004166666666666578
-    },
-    {
-      "feature": "pop_year_clipped",
-      "importance": -0.002083333333333326
-    },
-    {
-      "feature": "rainfall_file",
-      "importance": -0.003333333333333336
-    },
-    {
-      "feature": "rain_max_month_mm",
-      "importance": -0.004583333333333328
-    },
-    {
-      "feature": "rain_wet_month_share",
-      "importance": -0.004583333333333328
-    },
-    {
-      "feature": "rain_anomaly",
-      "importance": -0.009583333333333333
     }
   ]
 }

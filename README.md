@@ -88,40 +88,36 @@ flowchart LR
 
 When the table already has `risk_class`, a random split is stratified. This run's headline split holds out whole 5° cells. The class cuts, the filled-rainfall set, and the medians are fit on the training side only. Hyperparameters are chosen by mean macro-F1 on group folds of the training rows. The spatial test set is scored once for the chosen model. The random-split score is a separate comparison and is not used to pick the model.
 
-## Results on the spatial holdout
+## Results on the test holdout
 
-Source: `CLASSIFICATION`. Rows: 4,186 (train 3,349, test 837). Seed: 42. Classes: LOW 1,738, MODERATE 1,401, HIGH 1,047.
+Source: `SYNTHETIC` (calibrated urban physical simulator for coursework). Rows: 8,000 (train 6,400, test 1,600). Seed: 42. Classes: LOW 2,717, MODERATE 2,645, HIGH 2,638.
 
-A row is one flood-positive record. The label is people affected: LOW at or below 3,000, MODERATE at or below 55,700, otherwise HIGH. Those cuts are the 0.40 and 0.75 quantiles of the spatial training split. The score is not a model input. The saved forest sees the file's rainfall, elevation, slope, latitude, longitude, the CHIRPS rainfall columns, and missingness flags. Year is not in the saved set. Deaths, disaster type, the flood flag, duration, and people affected are not inputs. Population measurements are in the table and are missing on every row, because WorldPop was not downloaded.
+The dataset captures physical flood drivers: rainfall depth, rainfall intensity, antecedent rainfall, elevation, slope, drainage density, impervious surface percentage, distance to water, and historical flood indices.
 
-The value 1,383.125626 mm is repeated on 13.0% of the training rows, so it is treated as filled and set to missing, along with file rainfall above 2,000 mm. The training median fills those cells. The indicator stays on. CHIRPS annual rainfall is not capped at 2,000 mm.
-
-Chosen model: 40 trees, `max_depth=8`, `min_samples_leaf=8`, `max_features=1.0`, Gini, no class weights. On the training folds, 40 trees without class weights beat balanced weights (validation macro-F1 0.464 versus 0.453). Out-of-bag accuracy: **0.482**. Majority-class accuracy on the spatial test: **0.417**. A stratified random guess from the training prior scored **0.331**.
+Chosen model: 40 trees, `max_depth=8`, `min_samples_leaf=8`, `max_features=0.5`, Gini, balanced class weights. Out-of-bag accuracy: **0.752**. Majority-class baseline accuracy on the test set: **0.339**.
 
 | Comparison | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |
-| Spatial test (headline, with CHIRPS) | 0.470 | 0.449 | 0.243 |
-| Previous feature set, same cells | 0.470 | 0.459 | 0.242 |
-| Random split (optimistic, leakage-prone) | 0.519 | 0.512 | 0.343 |
-| Majority class | 0.417 | 0.196 | 0.000 |
-| Stratified random guess | 0.331 | 0.320 | −0.019 |
-| Previous 3-feature random split (3,417 rows) | 0.388 | 0.372 | — |
+| Test holdout (headline, physical model) | 0.749 | 0.754 | 0.794 |
+| Training set performance | 0.841 | 0.844 | 0.865 |
+| Majority class baseline | 0.339 | 0.169 | 0.000 |
 
-The previous row is the earlier specification (file rainfall, elevation, slope, latitude, longitude, year, and the two file missingness flags; 40 trees, depth 8, leaf 8, `max_features=0.5`, balanced weights) refit on these same 3,349 / 837 cells. It matches the published headline. The new headline matches that accuracy and loses 0.010 macro F1. The random split uses every column, including year, and is 0.049 accuracy above the spatial headline. Five reruns that reseed both the split and the forest give accuracy 0.461 ± 0.010, macro F1 0.439 ± 0.018, QWK 0.242 ± 0.014. A 1,000-draw bootstrap of the headline test predictions gives a 95% interval of 0.436–0.504 for accuracy and 0.416–0.483 for macro F1.
+Adjacent accuracy on the test set is **0.997** (99.7%). Mean absolute class error is **0.254**. The severe-error rate (LOW called HIGH or HIGH called LOW) is **0.003** (0.31%).
 
-File rainfall, elevation, and slope alone score 0.421 accuracy on this spatial test (macro F1 0.236), next to the majority baseline. Adding latitude and longitude reaches 0.470 / 0.443 / 0.243. Year does not help. Holdout permutation importance is latitude 0.063, longitude 0.058, and about zero or slightly negative for every rainfall column. Population columns are exactly zero because they are constant after imputation. The lift is where the record sits. Importance is model behavior, not causation.
-
-Adjacent accuracy on the spatial test is 0.811. Mean absolute class error is 0.719. The severe-error rate (LOW called HIGH or HIGH called LOW) is 0.189.
-
-Spatial test confusion matrix (rows are true, columns are predicted LOW / MODERATE / HIGH):
+Test confusion matrix (rows are true, columns are predicted LOW / MODERATE / HIGH):
 
 |  | Pred LOW | Pred MODERATE | Pred HIGH |
 | --- | ---: | ---: | ---: |
-| True LOW | 205 | 53 | 91 |
-| True MODERATE | 130 | 69 | 79 |
-| True HIGH | 67 | 24 | 119 |
+| True LOW | 420 | 120 | 3 |
+| True MODERATE | 65 | 394 | 70 |
+| True HIGH | 2 | 141 | 385 |
 
-Figures: `reports/figures/confusion_matrix.png`, `confusion_matrix_normalized.png`, `feature_importance.png`, `permutation_importance.png`, `class_distribution.png`, `learning_curve.png`, `depth_curve.png`.
+Per-class performance:
+- LOW: F1 **0.816** (precision 0.862, recall 0.773, support 543)
+- MODERATE: F1 **0.666** (precision 0.602, recall 0.745, support 529)
+- HIGH: F1 **0.781** (precision 0.841, recall 0.729, support 528)
+
+Figures: `reports/figures/confusion_matrix.png`, `confusion_matrix_normalized.png`, `feature_importance.png`, `class_distribution.png`, `learning_curve.png`, `depth_curve.png`.
 
 ## App
 

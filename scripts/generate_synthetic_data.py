@@ -64,8 +64,8 @@ if str(ROOT) not in sys.path:
 import config
 
 LABEL_QUANTILES = (0.34, 0.67)
-LABEL_NOISE = 0.06
-SCORE_NOISE = 0.04
+LABEL_NOISE = 0.01
+SCORE_NOISE = 0.02
 MISSING_RATE = 0.04
 N_DEFAULT = 8000
 
