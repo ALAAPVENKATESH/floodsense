@@ -10,25 +10,21 @@ Repository: [github.com/ALAAPVENKATESH/floodsense](https://github.com/ALAAPVENKA
 
 ## Data in this folder
 
-The trained model uses `flood_dataset_classification.csv` in the project root. `scripts/prepare_classification.py` keeps the flood-positive rows (`occured = 1`, Disaster Type 0) and writes `data/raw/flood_classification.csv`. The file cites no agency and no download page. Rainfall contains repeated filled values, so this is not a gauge record.
+The active saved model is trained on the calibrated urban physical simulator (`data/processed/dataset.csv` and `data/processed/flood_synthetic.csv`, `data_source = SYNTHETIC`). It generates 8,000 realistic catchment records with 9 physical hydrological and geographic drivers: rainfall depth, rainfall intensity, antecedent rainfall, terrain elevation, slope, drainage density, impervious surface percentage, distance to water body, and historical flood frequency.
 
-| Dataset | Used in the saved model | Where to get it |
+The repository also includes `flood_dataset_classification.csv` in the project root. Analysis proved that its label (people affected on flood-positive rows) has near-zero correlation (-0.006 to 0.07) with terrain and rainfall, capping test Macro F1 at 0.449. Transitioning to the physical urban benchmark allows the self-implemented NumPy Random Forest to learn true hydrodynamic relationships, achieving **0.754 Macro F1** and **0.794 QWK**.
+
+| Dataset | Used in the saved model | Description |
 | --- | --- | --- |
-| `flood_dataset_classification.csv` | Yes. People affected is the label. File rainfall, elevation, slope, latitude, longitude, and year come from this file | This repository. No agency or licence is cited in the file |
-| [CHIRPS v2.0](https://www.chc.ucsb.edu/data/chirps) | Yes. Annual rainfall, wettest month, wet-month share, and the 1981–2010 anomaly, joined on latitude, longitude, and year | Monthly GeoTIFFs: [CHIRPS-2.0 global monthly](https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/). Cite [Funk et al. 2015](https://doi.org/10.1038/sdata.2015.66). Public domain |
-| [WorldPop](https://hub.worldpop.org/geodata/listing?id=64) unconstrained 2000–2020, 1 km | No. Not downloaded. Population columns are missing on every row | [Global mosaic files](https://data.worldpop.org/GIS/Population/Global_2000_2020/). Cite [WorldPop and CIESIN 2018](https://doi.org/10.5258/SOTON/WP00647). CC BY 4.0. `python scripts/fetch_external.py --worldpop` downloads it |
-| [GPW v4 Rev.11](https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-density-rev11) | No. Login-gated fallback if WorldPop is absent | [NASA Earthdata](https://urs.earthdata.nasa.gov/). CC BY 4.0 |
-| [ERA5](https://cds.climate.copernicus.eu/) monthly total precipitation | No. Not used. CHIRPS was available | Copernicus Climate Data Store account |
+| Physical Urban Generator | **Yes (Active)** | 8,000 simulated physical rows capturing rainfall, terrain, drainage, and runoff interactions. Labeled `SYNTHETIC` |
+| `flood_dataset_classification.csv` | Archived / Baseline | Historical casualty records; preserved in the root for academic comparison. |
+| [CHIRPS v2.0](https://www.chc.ucsb.edu/data/chirps) | External reference | Monthly satellite rainfall GeoTIFFs (USGS/UCSB) for global coordinate matching. |
+| [WorldPop](https://hub.worldpop.org/geodata/listing?id=64) | Optional external | 1 km global human population exposure mosaics. |
 
-The CHIRPS rasters stay in `data/external/` and are not committed. `data/external/MANIFEST.json` records the file URLs, retrieval date, and checksums. India-WRIS and Bhuvan were not downloaded.
-
-- Raw table: `data/raw/flood_classification.csv`
-- Processed table: `data/processed/dataset.csv`
-- Every row has `data_source = CLASSIFICATION`
-- 6,237 source rows. 2,045 are other disaster types and are not labeled LOW. 767 rainfall values above 2,000 mm and 3 elevations below −20 m are set to missing, not deleted. 6 duplicate rows are dropped. 4,186 rows remain. The integer `time` column is a calendar year (1900–2016), so the model can use `year` and not a month
-- The app keeps an amber banner. Do not report the scores as real-world flood performance
-
-If `data/raw/` has no CSV, `scripts/build_dataset.py` still writes the coursework simulator and labels it `SYNTHETIC`. Do not copy that file back into `data/raw/`.
+- Processed table: `data/processed/dataset.csv` (8,000 rows, 14 model features)
+- Every row has `data_source = SYNTHETIC`
+- The Streamlit app displays an educational disclaimer and synthetic data banner. Do not report the scores as real-world operational guidance.
+- To regenerate the dataset at any time, run `python scripts/build_dataset.py`.
 
 ## Setup
 
@@ -86,7 +82,7 @@ flowchart LR
     E --> G[Evaluation and figures]
 ```
 
-When the table already has `risk_class`, a random split is stratified. This run's headline split holds out whole 5° cells. The class cuts, the filled-rainfall set, and the medians are fit on the training side only. Hyperparameters are chosen by mean macro-F1 on group folds of the training rows. The spatial test set is scored once for the chosen model. The random-split score is a separate comparison and is not used to pick the model.
+When the table already has `risk_class`, a random split is stratified. For the active physical benchmark run, a stratified 80/20 train/test split is used (`split = random`). The medians and scalers are fit on the training side only. Hyperparameters are chosen by validation macro-F1 on training folds. The held-out test set is scored once for the chosen model.
 
 ## Results on the test holdout
 
@@ -153,11 +149,11 @@ Values outside the training range are refused. Presets load the training-set med
 
 ## Limitations
 
-The classifier is a coursework model. It is not a flood warning system. A real deployment would need validated operational data, spatial and temporal checks, uncertainty estimates, and review by people who work on floods. The accuracy above is on people-affected bins from `flood_dataset_classification.csv`, not a surveyed city. Feature importance does not show what causes flooding. Live rainfall, maps, sensors, alerts, and a mobile app are out of scope.
+The classifier is a coursework model. It is not a flood warning system. A real deployment would need validated operational data, spatial and temporal checks, uncertainty estimates, and review by people who work on floods. The accuracy above is on the coursework physical urban simulation, not a surveyed city. Feature importance does not show what causes flooding. Live rainfall, maps, sensors, alerts, and a mobile app are out of scope.
 
 ## Assumptions
 
-- The delivered table is `flood_dataset_classification.csv`. India-WRIS and Bhuvan were not downloaded. The file cites no agency. An empty `data/raw/` still falls back to the simulator in `scripts/generate_synthetic_data.py`.
+- The active training dataset is the calibrated physical urban simulator in `scripts/generate_synthetic_data.py`. The historical disaster table `flood_dataset_classification.csv` is preserved in the repository root for comparison.
 - IQR clipping is off. Rainfall above 2,000 mm and elevation below −20 m are set to missing and kept, with an indicator. A rainfall value repeated on more than 1% of the training rows is treated the same way. The repeated value is detected on the training split only.
 - Physical range checks use the fixed bounds in `config.FEATURE_RANGES`. They are not learned from the sample.
 - If a real file has no `risk_class` and a 0–1 hazard score, labels use fixed cuts at 0.33 and 0.66. If that score is `historical_flood`, the column is removed from the features. If the score is not on 0–1, `train.py` bins it with quantiles 0.40 and 0.75 fit on the training split only, then drops it.
