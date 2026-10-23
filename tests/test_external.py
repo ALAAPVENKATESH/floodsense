@@ -18,7 +18,7 @@ _BANNED = {"total_affected", "deaths", "disaster_type", "occured", "occurred", "
 
 
 def test_geotiff_point_bounds_and_nodata(tmp_path):
-    import rasterio
+    rasterio = pytest.importorskip("rasterio")
     from rasterio.transform import from_origin
 
     values = np.full((6, 6), -9999, dtype=np.float32)

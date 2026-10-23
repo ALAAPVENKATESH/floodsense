@@ -28,17 +28,18 @@ BENCHMARK_SOURCE = "URBANFLOODBENCH"
 BENCHMARK_DEPTH_M = (0.15, 0.50)
 BENCHMARK_MAX_ROWS = 8000
 
-# Predictors the model may use. Anything absent from a real CSV is dropped.
-BASE_FEATURES = [
-    "rainfall",
-    "rainfall_file",
-    "rainfall_intensity",
-    "elevation",
-    "slope",
-    "drainage_density",
-    "impervious_area",
-    "distance_to_water",
-    "historical_flood",
+# Predictors the model may use. Anything absent from a real CSV is dropped.
+# NOTE: rainfall_file is EXCLUDED -- it is the exact column used to assign
+# risk_class labels (p33 threshold on flood rows). Including it is direct label leakage.
+BASE_FEATURES = [
+    "rainfall",
+    "rainfall_intensity",
+    "elevation",
+    "slope",
+    "drainage_density",
+    "impervious_area",
+    "distance_to_water",
+    "historical_flood",
 ]
 # CHIRPS rainfall and WorldPop/GPW exposure. Absent columns are omitted.
 RAIN_EXT = [
@@ -52,7 +53,10 @@ POP_EXT = [
     "pop_sum_25km",
     "pop_sum_100km",
 ]
-EXTERNAL_FLAGS = ["rain_missing", "pop_missing", "pop_year_clipped"]
+# NOTE: rain_missing and pop_missing are EXCLUDED -- rain_missing=1 for every
+# LOW row (occured=0 has no CHIRPS data), so it perfectly encodes the target.
+# pop_year_clipped is also excluded as a zero-information constant.
+EXTERNAL_FLAGS: list[str] = []  # formerly ["rain_missing", "pop_missing", "pop_year_clipped"]
 OPTIONAL_FEATURES = [
     "rainfall_antecedent",
     "latitude",
@@ -64,7 +68,7 @@ OPTIONAL_FEATURES = [
     *POP_EXT,
     *EXTERNAL_FLAGS,
 ]
-INDICATOR_FEATURES = ["rainfall_missing", "elevation_missing", *EXTERNAL_FLAGS]
+INDICATOR_FEATURES = ["rainfall_missing", "elevation_missing"]
 
 # Not model inputs. Used only to build a location key or a label.
 # latitude, longitude, and year are also optional predictors when the file has them.
