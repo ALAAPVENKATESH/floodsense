@@ -1,6 +1,6 @@
 # Slide outline
 
-About 12 slides. Speaker notes are under each title. Figures are in `reports/figures/`. Every results slide needs the spoken line: these numbers are people-affected bins from `flood_dataset_classification.csv`, not a flood-agency survey. The headline split holds out 5° cells.
+About 12 slides. Speaker notes are under each title. Figures are in `reports/figures/`. Every results slide should note: these are historical disaster event records from `flood_dataset_classification.csv`, labeled by flood-occurrence and rainfall; they are not a certified flood-agency survey. The headline split holds out 5° grid cells.
 
 ## 1. Title
 
@@ -24,11 +24,11 @@ Notes: Tick these off against the design document. Mention that "implement" mean
 
 ## 4. Data
 
-Current run: 8,000 simulated physical rows from the calibrated urban flood generator, seed 42. Classes: LOW 2,717, MODERATE 2,645, HIGH 2,638.
+Current run: 6,034 rows from `flood_dataset_classification.csv` (real historical disaster events). Classes: LOW 2,045 (no flood), MODERATE 1,384 (flood, lower rainfall), HIGH 2,808 (flood, higher rainfall). Seed 42.
 
 Figure: `class_distribution.png`.
 
-Source: Physical urban catchment simulator. Drivers: rainfall, intensity, antecedent rain, elevation, slope, drainage density, impervious %, distance to water.
+Labels: `occured = 0` → LOW. `occured = 1` split at 33rd rainfall percentile (887.8 mm, fixed global constant) → MODERATE / HIGH. Features: rainfall, elevation, slope, latitude, longitude, CHIRPS rainfall statistics, WorldPop population exposure (15 total).
 
 ## 5. Pipeline
 
@@ -42,25 +42,25 @@ Show the formula table: runoff proxy `rainfall * impervious_area / 100`, cumulat
 
 ## 7. Model
 
-Bootstrap samples, Gini, a random subset of features at every split, majority vote. Chosen settings: 40 trees, depth 8, at least 8 rows per leaf, half the features at each split, balanced class weights, seed 42.
+Bootstrap samples, Gini, a random subset of features at every split, majority vote. Chosen settings: 20 trees, depth 8, at least 8 rows per leaf, all features at each split (`max_features=1.0`), no class weight override, seed 42.
 
 Notes: One slide is enough for the algorithm. If asked "why not scikit-learn?", the answer is the assignment. sklearn is only in the tests and the benchmark script.
 
 ## 8. How we scored it
 
-80/20 train/test holdout (6,400 train, 1,600 test). Hyperparameter search uses training folds. Winner refit with 40 trees.
+Spatial (5° grid cell) train/test split (4,820 train, 1,214 test). Hyperparameter search uses training folds. Winner refit with 20 trees.
 
 Figure: `learning_curve.png` and `depth_curve.png`.
 
-Notes: The winning structure is depth 8, leaf 8, `max_features=0.5`. Out-of-bag accuracy on the final fit is 0.752.
+Notes: The winning structure is depth 8, leaf 8, `max_features=1.0`. Out-of-bag accuracy on the final fit is **0.997**.
 
 ## 9. Results
 
-Test accuracy **0.749** (74.9%), macro F1 **0.754** (75.4%), QWK **0.794** (79.4%). Majority baseline 0.339. Beat baseline by +41%.
+Test accuracy **0.996** (99.6%), macro F1 **0.995** (99.5%), QWK **0.997** (99.7%). Majority baseline 0.453. Beat baseline by +54%.
 
 Figure: `confusion_matrix.png`.
 
-Notes: Adjacent accuracy is 99.7%, with severe errors at only 0.31%. Per-class F1: LOW 0.816, HIGH 0.781, MODERATE 0.666. Repeat that this is a simulated physical catchment benchmark for coursework.
+Notes: Adjacent accuracy is 100%, with zero severe errors (LOW called HIGH or HIGH called LOW). Per-class F1: LOW 1.000, HIGH 0.995, MODERATE 0.990. Repeat that this is real historical disaster event data from `flood_dataset_classification.csv`, labeled by flood-occurrence and rainfall intensity.
 
 ## 10. What the model used
 

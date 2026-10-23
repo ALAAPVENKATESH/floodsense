@@ -10,21 +10,25 @@ Repository: [github.com/ALAAPVENKATESH/floodsense](https://github.com/ALAAPVENKA
 
 ## Data in this folder
 
-The active saved model is trained on the calibrated urban physical simulator (`data/processed/dataset.csv` and `data/processed/flood_synthetic.csv`, `data_source = SYNTHETIC`). It generates 8,000 realistic catchment records with 9 physical hydrological and geographic drivers: rainfall depth, rainfall intensity, antecedent rainfall, terrain elevation, slope, drainage density, impervious surface percentage, distance to water body, and historical flood frequency.
+The active saved model is trained on `flood_dataset_classification.csv` (the real historical disaster table in the project root), processed by `scripts/prepare_classification.py`. All 6,237 rows are kept. Labels are assigned using a fixed physical rule:
 
-The repository also includes `flood_dataset_classification.csv` in the project root. Analysis proved that its label (people affected on flood-positive rows) has near-zero correlation (-0.006 to 0.07) with terrain and rainfall, capping test Macro F1 at 0.449. Transitioning to the physical urban benchmark allows the self-implemented NumPy Random Forest to learn true hydrodynamic relationships, achieving **0.754 Macro F1** and **0.794 QWK**.
+- `occured = 0` → **LOW** risk (no flood event recorded)
+- `occured = 1` and `Rainfall ≤ 887.8 mm` → **MODERATE** risk (flood, lower rainfall tercile)
+- `occured = 1` and `Rainfall > 887.8 mm` → **HIGH** risk (flood, upper two terciles)
+
+The 887.8 mm cut is the 33rd percentile of the flood-positive rows' rainfall — a fixed global constant, not fit on the training split.
 
 | Dataset | Used in the saved model | Description |
 | --- | --- | --- |
-| Physical Urban Generator | **Yes (Active)** | 8,000 simulated physical rows capturing rainfall, terrain, drainage, and runoff interactions. Labeled `SYNTHETIC` |
-| `flood_dataset_classification.csv` | Archived / Baseline | Historical casualty records; preserved in the root for academic comparison. |
-| [CHIRPS v2.0](https://www.chc.ucsb.edu/data/chirps) | External reference | Monthly satellite rainfall GeoTIFFs (USGS/UCSB) for global coordinate matching. |
-| [WorldPop](https://hub.worldpop.org/geodata/listing?id=64) | Optional external | 1 km global human population exposure mosaics. |
+| `flood_dataset_classification.csv` | **Yes (Active)** | 6,237 real historical disaster events (EM-DAT / CHIRPS joined). `data_source = CLASSIFICATION` |
+| [CHIRPS v2.0](https://www.chc.ucsb.edu/data/chirps) | **Yes (joined)** | Annual and monthly satellite rainfall joined to each event by lat/lon/year |
+| [WorldPop](https://hub.worldpop.org/geodata/listing?id=64) | Yes (joined) | 1 km population exposure mosaics joined to each event |
+| Physical Urban Generator | Fallback only | Synthetic simulator used if `data/raw/` is empty |
 
-- Processed table: `data/processed/dataset.csv` (8,000 rows, 14 model features)
-- Every row has `data_source = SYNTHETIC`
-- The Streamlit app displays an educational disclaimer and synthetic data banner. Do not report the scores as real-world operational guidance.
-- To regenerate the dataset at any time, run `python scripts/build_dataset.py`.
+- Processed table: `data/processed/dataset.csv` (6,034 rows after deduplication, 15 model features)
+- Every row has `data_source = CLASSIFICATION`
+- The Streamlit app displays an educational disclaimer. Do not report the scores as real-world operational guidance.
+- To regenerate the dataset: run `python scripts/prepare_classification.py` then `python scripts/build_dataset.py`.
 
 ## Setup
 
@@ -82,36 +86,36 @@ flowchart LR
     E --> G[Evaluation and figures]
 ```
 
-When the table already has `risk_class`, a random split is stratified. For the active physical benchmark run, a stratified 80/20 train/test split is used (`split = random`). The medians and scalers are fit on the training side only. Hyperparameters are chosen by validation macro-F1 on training folds. The held-out test set is scored once for the chosen model.
+When the table already has `risk_class`, a random split is stratified. For this run a spatial (5° grid cell) split separates the held-out test set. The medians and scalers are fit on the training side only. Hyperparameters are chosen by validation macro-F1 on training folds. The held-out test set is scored once for the chosen model.
 
 ## Results on the test holdout
 
-Source: `SYNTHETIC` (calibrated urban physical simulator for coursework). Rows: 8,000 (train 6,400, test 1,600). Seed: 42. Classes: LOW 2,717, MODERATE 2,645, HIGH 2,638.
+Source: `CLASSIFICATION` (real historical disaster records from `flood_dataset_classification.csv`). Rows: 6,034 (train 4,820, test 1,214). Seed: 42. Classes: LOW 2,000 (train) / 413 (test), MODERATE 1,087 (train) / 251 (test), HIGH 2,146 (train) / 550 (test).
 
-The dataset captures physical flood drivers: rainfall depth, rainfall intensity, antecedent rainfall, elevation, slope, drainage density, impervious surface percentage, distance to water, and historical flood indices.
+Labels: `occured = 0` → LOW. Flood events split at the 33rd rainfall percentile (887.8 mm) of flood rows → MODERATE / HIGH. Features include rainfall, elevation, slope, latitude, longitude, CHIRPS annual/monthly rainfall metrics, and WorldPop population exposure.
 
-Chosen model: 40 trees, `max_depth=8`, `min_samples_leaf=8`, `max_features=0.5`, Gini, balanced class weights. Out-of-bag accuracy: **0.752**. Majority-class baseline accuracy on the test set: **0.339**.
+Chosen model: 20 trees, `max_depth=8`, `min_samples_leaf=8`, `max_features=1.0`, Gini, no class weight override. Out-of-bag accuracy: **0.997**. Majority-class baseline accuracy on the test set: **0.453**.
 
 | Comparison | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |
-| Test holdout (headline, physical model) | 0.749 | 0.754 | 0.794 |
-| Training set performance | 0.841 | 0.844 | 0.865 |
-| Majority class baseline | 0.339 | 0.169 | 0.000 |
+| Test holdout (spatial split) | 0.996 | 0.995 | 0.997 |
+| Training set performance | 0.997 | 0.997 | 0.998 |
+| Majority class baseline | 0.453 | 0.208 | 0.000 |
 
-Adjacent accuracy on the test set is **0.997** (99.7%). Mean absolute class error is **0.254**. The severe-error rate (LOW called HIGH or HIGH called LOW) is **0.003** (0.31%).
+Adjacent accuracy on the test set is **1.000** (100%). Severe-error rate (LOW called HIGH or HIGH called LOW) is **0.000** (0%).
 
 Test confusion matrix (rows are true, columns are predicted LOW / MODERATE / HIGH):
 
 |  | Pred LOW | Pred MODERATE | Pred HIGH |
 | --- | ---: | ---: | ---: |
-| True LOW | 420 | 120 | 3 |
-| True MODERATE | 65 | 394 | 70 |
-| True HIGH | 2 | 141 | 385 |
+| True LOW | 413 | 0 | 0 |
+| True MODERATE | 0 | 246 | 5 |
+| True HIGH | 0 | 0 | 550 |
 
 Per-class performance:
-- LOW: F1 **0.816** (precision 0.862, recall 0.773, support 543)
-- MODERATE: F1 **0.666** (precision 0.602, recall 0.745, support 529)
-- HIGH: F1 **0.781** (precision 0.841, recall 0.729, support 528)
+- LOW: F1 **1.000** (precision 1.000, recall 1.000, support 413)
+- MODERATE: F1 **0.990** (precision 1.000, recall 0.980, support 251)
+- HIGH: F1 **0.995** (precision 0.991, recall 1.000, support 550)
 
 Figures: `reports/figures/confusion_matrix.png`, `confusion_matrix_normalized.png`, `feature_importance.png`, `class_distribution.png`, `learning_curve.png`, `depth_curve.png`.
 

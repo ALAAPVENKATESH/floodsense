@@ -4,7 +4,7 @@ Machine Learning (BIC703), Semester VII, Group G2.
 
 Title: Urban Flood Risk Prediction Using a Self-Implemented Random Forest Algorithm.
 
-The tables below are filled from `models/metrics.json` after `python scripts/train.py` on the physical urban catchment benchmark (8,000 rows, seed 42, holdout test split). The data is simulated for coursework.
+The tables below are filled from `models/metrics.json` after `python scripts/train.py` on the real historical disaster dataset (`flood_dataset_classification.csv`, 6,034 rows, seed 42, spatial holdout test split). `data_source = CLASSIFICATION`.
 
 ## 1. Project overview
 
@@ -47,9 +47,11 @@ LOW, MODERATE, HIGH. The app also shows class probabilities (mean of the trees' 
 
 ## 7. Dataset
 
-**This run: SYNTHETIC (physical urban catchment generator).** 8,000 simulated physical rows, seed 42. Class counts: LOW 2,717, MODERATE 2,645, HIGH 2,638. Figure: `reports/figures/class_distribution.png`.
+**This run: CLASSIFICATION (real historical disaster records from `flood_dataset_classification.csv`).** 6,034 rows after deduplication, seed 42. Spatial (5° grid cell) holdout split: train 4,820, test 1,214. Class counts (train): LOW 1,587, MODERATE 1,087, HIGH 2,146. Figure: `reports/figures/class_distribution.png`.
 
-The dataset generates physical urban flood drivers: rainfall depth, rainfall intensity, antecedent rainfall, elevation, slope, drainage density, impervious surface percentage, distance to water, and historical flood indices.
+Labels assigned by `scripts/prepare_classification.py`: `occured = 0` → LOW. Flood-positive rows (`occured = 1`) split at the 33rd rainfall percentile (887.8 mm, a fixed global constant) → MODERATE (≤ 887.8 mm) / HIGH (> 887.8 mm).
+
+Features used in this run: rainfall_file, elevation, slope, latitude, longitude, rain_annual_mm, rain_max_month_mm, rain_wet_month_share, rain_anomaly, rain_missing, pop_density_point, pop_sum_25km, pop_sum_100km, pop_missing, pop_year_clipped (15 features).
 
 ## 8. Machine learning design
 
@@ -57,24 +59,24 @@ Describe, with the code as the reference:
 
 - Bootstrap sample per tree, with a seed derived from 42
 - Gini impurity
-- At each split, a random feature subset (`max_features=0.5` in the chosen model)
+- At each split, a random feature subset (`max_features=1.0` in the chosen model)
 - Midpoint thresholds between sorted unique values
 - Stop on depth, minimum samples, a pure node, or no split with positive gain
 - Final prediction by majority vote
-- Class weights `balanced`
 
 Search on the training split only (15 trees each). Validation macro-F1:
 
 | max_depth | min_samples_leaf | max_features | Validation macro-F1 |
 | ---: | ---: | --- | ---: |
-| 6 | 12 | sqrt | 0.715 |
-| 8 | 8 | sqrt | 0.721 |
-| 10 | 5 | sqrt | 0.738 |
-| 8 | 8 | log2 | 0.721 |
-| 8 | 8 | 0.5 | 0.745 |
-| 8 | 8 | 1.0 | 0.732 |
+| 6 | 12 | sqrt | (see models/metrics.json) |
+| 8 | 8 | sqrt | (see models/metrics.json) |
+| 10 | 5 | sqrt | (see models/metrics.json) |
+| 8 | 8 | log2 | (see models/metrics.json) |
+| 8 | 8 | 0.5 | (see models/metrics.json) |
+| 8 | 8 | 1.0 | (see models/metrics.json — **winner**) |
 
-The search objective is macro-F1, so the three classes count equally. Quadratic weighted kappa is reported and was not the selection score. Depth 8, leaf 8, and `max_features=0.5` won (validation macro-F1 0.745). Figure: `reports/figures/depth_curve.png`. Out-of-bag accuracy on the final fit is 0.752.
+The search objective is macro-F1, so the three classes count equally. Depth 8, leaf 8, and `max_features=1.0` won. Out-of-bag accuracy on the final fit is **0.997**.
+
 
 ## 9. Application design
 
@@ -92,20 +94,20 @@ Python, NumPy 2.1.3, pandas 2.2.3, Matplotlib 3.9.2, Streamlit 1.40.2. scikit-le
 
 ## 12. Evaluation
 
-Headline holdout: 1,600 held-out test rows (80/20 train-test split, seed 42). Majority-class accuracy on that split: 0.339.
+Headline holdout: 1,214 held-out test rows (spatial 5° grid cell split, seed 42). Majority-class accuracy on that split: 0.453.
 
 | Comparison | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |
-| Test holdout (headline, physical model) | 0.749 | 0.754 | 0.794 |
-| Training set performance | 0.841 | 0.844 | 0.865 |
-| Majority class baseline | 0.339 | 0.169 | 0.000 |
+| Test holdout (spatial split) | 0.996 | 0.995 | 0.997 |
+| Training set performance | 0.997 | 0.997 | 0.998 |
+| Majority class baseline | 0.453 | 0.208 | 0.000 |
 
-Train accuracy: 0.841. Out-of-bag accuracy: 0.752. Adjacent accuracy: 0.997 (99.7%). Mean absolute class error: 0.254. Severe-error rate: 0.003 (0.31%).
+Train accuracy: 0.997. Out-of-bag accuracy: 0.997. Adjacent accuracy: 1.000 (100%). Mean absolute class error: 0.004. Severe-error rate: 0.000 (0%).
 
 Per-class performance:
-- LOW: F1 0.816 (precision 0.862, recall 0.773, support 543)
-- MODERATE: F1 0.666 (precision 0.602, recall 0.745, support 529)
-- HIGH: F1 0.781 (precision 0.841, recall 0.729, support 528)
+- LOW: F1 1.000 (precision 1.000, recall 1.000, support 413)
+- MODERATE: F1 0.990 (precision 1.000, recall 0.980, support 251)
+- HIGH: F1 0.995 (precision 0.991, recall 1.000, support 550)
 
 | Features | Accuracy | Macro F1 | QWK |
 | --- | ---: | ---: | ---: |
