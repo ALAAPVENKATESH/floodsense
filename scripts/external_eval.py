@@ -39,10 +39,13 @@ def _rain(columns) -> str:
 def feature_sets(columns) -> list[tuple[str, list[str]]]:
     have = set(columns)
     rain = _rain(have)
-    physical = [name for name in (rain, "elevation", "slope", "rainfall_missing", "elevation_missing") if name in have]
+    # NOTE: rainfall_file is intentionally excluded here — it is the direct label variable.
+    # rain_missing / pop_missing / pop_year_clipped are excluded because rain_missing=1 for
+    # every LOW row, making it a perfect class proxy (data leakage).
+    physical = [name for name in ("elevation", "slope", "rainfall_missing", "elevation_missing") if name in have]
     loc = physical + [name for name in ("latitude", "longitude") if name in have]
-    chirps = [name for name in list(config.RAIN_EXT) + ["rain_missing"] if name in have]
-    pop = [name for name in list(config.POP_EXT) + ["pop_missing", "pop_year_clipped"] if name in have]
+    chirps = [name for name in list(config.RAIN_EXT) if name in have]  # rain_missing removed
+    pop = [name for name in list(config.POP_EXT) if name in have]  # pop_missing/pop_year_clipped removed
     return [
         ("physical", physical),
         ("plus_lat_lon", loc),

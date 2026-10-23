@@ -2,10 +2,14 @@
   "data_source": "CLASSIFICATION",
   "warning": "CLASSIFICATION: flood_dataset_classification.csv, flood-positive rows only. Classes are train-only quantiles of people affected, not a surveyed water depth. Rainfall contains repeated filled values. Do not report these metrics as real-world performance.",
   "coverage": "Local file flood_dataset_classification.csv. Global coordinates and a year column. No agency or licence is cited in the file. Distance was left out: most values are 0 and the rest are far outside 0\u2013500 km.",
-  "n_rows": 4186,
-  "class_counts": {},
+  "n_rows": 6034,
+  "class_counts": {
+    "HIGH": 2696,
+    "LOW": 2000,
+    "MODERATE": 1338
+  },
   "label_rule": "Flood-positive rows only (occured = 1, which matches Disaster Type 0). Total Affected is the score. scripts/train.py bins it with quantiles (0.4, 0.75) fit on the training split only, then drops it. Deaths, affected, disaster type, and occured are not model inputs.",
-  "label_score_column": "flood_hazard_score",
+  "label_score_column": null,
   "excluded_features": [],
   "files": [
     "flood_classification.csv"
@@ -13,6 +17,6 @@
   "merge": "single file",
   "dropped_overlapping_columns": [],
   "dropped_invalid": 0,
-  "masked_extremes": 770,
-  "dropped_duplicates": 6
+  "masked_extremes": 1022,
+  "dropped_duplicates": 203
 }

@@ -2,48 +2,36 @@
   "note": "Feature importance reflects model behavior on the fitted data, not proof of causation.",
   "impurity": [
     {
-      "feature": "longitude",
-      "importance": 0.22358836802845028
-    },
-    {
-      "feature": "latitude",
-      "importance": 0.21437047346388183
-    },
-    {
-      "feature": "elevation",
-      "importance": 0.09656082297079654
-    },
-    {
-      "feature": "rainfall_file",
-      "importance": 0.08561454284096456
-    },
-    {
-      "feature": "slope",
-      "importance": 0.08170807091724706
+      "feature": "rain_annual_mm",
+      "importance": 0.4105579010044814
     },
     {
       "feature": "rain_wet_month_share",
-      "importance": 0.08138438316005073
-    },
-    {
-      "feature": "rain_anomaly",
-      "importance": 0.07713987847966035
+      "importance": 0.20056071109758275
     },
     {
       "feature": "rain_max_month_mm",
-      "importance": 0.06903852615447449
+      "importance": 0.18006403788398223
     },
     {
-      "feature": "rain_annual_mm",
-      "importance": 0.05850498700651049
+      "feature": "rain_anomaly",
+      "importance": 0.06481697888140754
     },
     {
-      "feature": "pop_year_clipped",
-      "importance": 0.009884923124658948
+      "feature": "latitude",
+      "importance": 0.05904452207825789
     },
     {
-      "feature": "rain_missing",
-      "importance": 0.0022050238533045533
+      "feature": "longitude",
+      "importance": 0.03156070308025485
+    },
+    {
+      "feature": "elevation",
+      "importance": 0.02884613935908404
+    },
+    {
+      "feature": "slope",
+      "importance": 0.024549006614949274
     },
     {
       "feature": "pop_density_point",
@@ -55,33 +43,41 @@
     },
     {
       "feature": "pop_sum_100km",
-      "importance": 0.0
-    },
-    {
-      "feature": "pop_missing",
       "importance": 0.0
     }
   ],
   "permutation": [
     {
-      "feature": "latitude",
-      "importance": 0.06333333333333334
+      "feature": "rain_annual_mm",
+      "importance": 0.11291666666666662
     },
     {
-      "feature": "longitude",
-      "importance": 0.05791666666666669
+      "feature": "latitude",
+      "importance": 0.02083333333333326
+    },
+    {
+      "feature": "rain_wet_month_share",
+      "importance": 0.01041666666666663
     },
     {
       "feature": "slope",
-      "importance": 0.006250000000000015
+      "importance": 0.006666666666666636
+    },
+    {
+      "feature": "rain_max_month_mm",
+      "importance": 0.004166666666666615
+    },
+    {
+      "feature": "longitude",
+      "importance": 0.00374999999999992
     },
     {
       "feature": "elevation",
-      "importance": 0.0037500000000000124
+      "importance": 0.002083333333333289
     },
     {
-      "feature": "rain_annual_mm",
-      "importance": 0.0029166666666666785
+      "feature": "rain_anomaly",
+      "importance": 0.0016666666666666312
     },
     {
       "feature": "pop_density_point",
@@ -94,34 +90,6 @@
     {
       "feature": "pop_sum_100km",
       "importance": 0.0
-    },
-    {
-      "feature": "pop_missing",
-      "importance": 0.0
-    },
-    {
-      "feature": "rain_missing",
-      "importance": -0.0004166666666666578
-    },
-    {
-      "feature": "pop_year_clipped",
-      "importance": -0.002083333333333326
-    },
-    {
-      "feature": "rainfall_file",
-      "importance": -0.003333333333333336
-    },
-    {
-      "feature": "rain_max_month_mm",
-      "importance": -0.004583333333333328
-    },
-    {
-      "feature": "rain_wet_month_share",
-      "importance": -0.004583333333333328
-    },
-    {
-      "feature": "rain_anomaly",
-      "importance": -0.009583333333333333
     }
   ]
 }
